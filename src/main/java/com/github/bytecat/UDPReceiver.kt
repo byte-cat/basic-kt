@@ -33,6 +33,12 @@ class UDPReceiver(val port: Int, private val executor: Executor? = null, val buf
                 }
             }
 
+            val address = packet.address
+            if (address == null) {
+                println("ERROR: packet.address is NULL")
+                return@Runnable
+            }
+
             val data = packet.data.copyOfRange(packet.offset, packet.offset + packet.length)
             receiveListener?.onReceive(packet.address.hostAddress, data)
         }
