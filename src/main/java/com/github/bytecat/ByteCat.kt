@@ -6,6 +6,9 @@ import com.github.bytecat.contact.CatBook
 import com.github.bytecat.handler.IHandler
 import com.github.bytecat.handler.SimpleHandler
 import com.github.bytecat.platform.IPlatform
+import com.github.bytecat.protocol.*
+import java.util.Timer
+import java.util.TimerTask
 import java.util.UUID
 
 open class ByteCat {
@@ -59,6 +62,7 @@ open class ByteCat {
             }
         }
     }
+
     private val messageListener = object : UDPReceiver.OnReceiveListener {
         override fun onReady() {
             debugger?.onMessageReady()
@@ -70,14 +74,27 @@ open class ByteCat {
             dispatchReceive(data) {event, jsonObj ->
                 when(event) {
                     EVENT_HI2U -> {
-                        val byteHoleId = jsonObj.getString(KEY_BYTE_CAT_ID)
-                        val sysUserName = jsonObj.getString(KEY_SYS_USER_NAME)
-                        val osName = jsonObj.getString(KEY_OS_NAME)
-
-                        val broadcastPort = jsonObj.getIntValue(KEY_BROADCAST_PORT)
+                        val callMeBack = jsonObj.getBooleanValue(KEY_CALL_ME_BACK, false)
                         val messagePort = jsonObj.getIntValue(KEY_MESSAGE_PORT)
+                        if (callMeBack) {
+                            val eventId = jsonObj.getString(KEY_EVENT_ID)
+                            udpSender.send(fromIp, messagePort, protocol.callBack(myCatId, eventId))
+                        } else {
+                            val byteHoleId = jsonObj.getString(KEY_BYTE_CAT_ID)
+                            val sysUserName = jsonObj.getString(KEY_SYS_USER_NAME)
+                            val osName = jsonObj.getString(KEY_OS_NAME)
 
-                        catBook.addContact(byteHoleId, sysUserName, osName, fromIp, broadcastPort, messagePort)
+                            val broadcastPort = jsonObj.getIntValue(KEY_BROADCAST_PORT)
+
+                            catBook.addContact(byteHoleId, sysUserName, osName, fromIp, broadcastPort, messagePort)
+                        }
+                    }
+                    EVENT_CALL_BACK -> {
+                        val callBackId = jsonObj.getString(KEY_CALL_BACK_ID)
+                        refreshingCats.remove(callBackId)
+                        if (refreshingCats.isEmpty()) {
+                            refreshTimer.cancel()
+                        }
                     }
                 }
             }
@@ -105,7 +122,12 @@ open class ByteCat {
             debugger?.onContactRemove(contact)
         }
     }
+
     val catBook = CatBook()
+
+    private val refreshingCats = HashMap<String, Contact>()
+
+    private val refreshTimer = Timer()
 
     fun startup() {
         for (port in BROADCAST_PREPARE_PORTS) {
@@ -131,12 +153,35 @@ open class ByteCat {
         }
     }
 
+    fun refresh() {
+        handler.post {
+            catBook.cats.forEach {
+                val event = protocol.hi2YouAndCallback(myCatId)
+                udpSender.send(it.ipAddress, it.messagePort, event.toJSONObject().toString())
+
+                refreshingCats[event.eventId] = it
+            }
+            refreshTimer.schedule(object : TimerTask() {
+                override fun run() {
+                    if (refreshingCats.isNotEmpty()) {
+                        for ((_, cat) in refreshingCats) {
+                            catBook.removeContact(cat.id)
+                        }
+                        refreshingCats.clear()
+                    }
+                }
+            }, 1000L)
+        }
+    }
+
     fun shutdown() {
         handler.post {
             for (port in BROADCAST_PREPARE_PORTS) {
                 udpSender.send(BROADCAST_IP, port, protocol.bye2All(myCatId))
             }
             catBook.unregisterCallback(contactCallback)
+
+            refreshTimer.cancel()
 
             broadcastReceiver.close()
             messageReceiver.close()
