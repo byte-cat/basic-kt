@@ -10,13 +10,17 @@ class CatBook {
 
     val cats: List<Contact> get() = catList
 
-    fun addContact(id: String, name: String, system: String,
+    fun addContact(name: String, system: String,
                    ip: String, broadcastPort: Int, messagePort: Int) {
-        addContact(Contact(id, name, system, ip, broadcastPort, messagePort))
+        addContact(Contact(name, system, ip, broadcastPort, messagePort))
     }
 
     fun addContact(contact: Contact) {
         if (catList.contains(contact)) {
+            catList[catList.indexOf(contact)] = contact
+            callbacks.forEach {
+                it.onContactUpdate(contact)
+            }
             return
         }
         catList.add(contact)
@@ -25,9 +29,9 @@ class CatBook {
         }
     }
 
-    fun removeContact(id: String) {
+    fun removeContact(ip: String) {
         val index = catList.indexOfFirst {
-            it.id == id
+            it.ipAddress == ip
         }
         if (index >= 0 && index < catList.size) {
             val contact = catList.removeAt(index)
@@ -56,6 +60,7 @@ class CatBook {
 
     interface Callback {
         fun onContactAdd(contact: Contact)
+        fun onContactUpdate(contact: Contact)
         fun onContactRemove(contact: Contact)
     }
 

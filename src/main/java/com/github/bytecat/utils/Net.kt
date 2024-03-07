@@ -1,11 +1,7 @@
-package com.github.bytecat
+package com.github.bytecat.utils
 
 import java.net.Inet4Address
 import java.net.NetworkInterface
-
-fun main(vararg args: String) {
-    println("ip=${getLocalIP()}")
-}
 
 fun getLocalIP(): String {
     try {
