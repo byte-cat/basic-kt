@@ -2,7 +2,7 @@ package com.github.bytecat
 
 import com.alibaba.fastjson2.JSONObject
 import com.github.bytecat.contact.Contact
-import com.github.bytecat.contact.ContactBook
+import com.github.bytecat.contact.CatBook
 import com.github.bytecat.handler.IHandler
 import com.github.bytecat.handler.SimpleHandler
 import com.github.bytecat.platform.IPlatform
@@ -47,13 +47,13 @@ open class ByteCat {
                         val broadcastPort = jsonObj.getIntValue(KEY_BROADCAST_PORT)
                         val messagePort = jsonObj.getIntValue(KEY_MESSAGE_PORT)
 
-                        contactBook.addContact(catId, sysUserName, osName, fromIp, broadcastPort, messagePort)
+                        catBook.addContact(catId, sysUserName, osName, fromIp, broadcastPort, messagePort)
 
                         udpSender.send(fromIp, messagePort, protocol.hi2You(myCatId, broadcastReceiver.port, messageReceiver.port))
                     }
                     EVENT_BYE2A -> {
                         val byteHoleId = jsonObj.getString(KEY_BYTE_CAT_ID)
-                        contactBook.removeContact(byteHoleId)
+                        catBook.removeContact(byteHoleId)
                     }
                 }
             }
@@ -77,7 +77,7 @@ open class ByteCat {
                         val broadcastPort = jsonObj.getIntValue(KEY_BROADCAST_PORT)
                         val messagePort = jsonObj.getIntValue(KEY_MESSAGE_PORT)
 
-                        contactBook.addContact(byteHoleId, sysUserName, osName, fromIp, broadcastPort, messagePort)
+                        catBook.addContact(byteHoleId, sysUserName, osName, fromIp, broadcastPort, messagePort)
                     }
                 }
             }
@@ -96,7 +96,7 @@ open class ByteCat {
     @Volatile
     private var isReady = false
 
-    private val contactCallback = object : ContactBook.Callback {
+    private val contactCallback = object : CatBook.Callback {
         override fun onContactAdd(contact: Contact) {
             debugger?.onContactAdd(contact)
         }
@@ -105,7 +105,7 @@ open class ByteCat {
             debugger?.onContactRemove(contact)
         }
     }
-    private val contactBook = ContactBook()
+    val catBook = CatBook()
 
     fun startup() {
         for (port in BROADCAST_PREPARE_PORTS) {
@@ -136,7 +136,7 @@ open class ByteCat {
             for (port in BROADCAST_PREPARE_PORTS) {
                 udpSender.send(BROADCAST_IP, port, protocol.bye2All(myCatId))
             }
-            contactBook.unregisterCallback(contactCallback)
+            catBook.unregisterCallback(contactCallback)
 
             broadcastReceiver.close()
             messageReceiver.close()
@@ -156,7 +156,7 @@ open class ByteCat {
             return
         }
         handler.post {
-            contactBook.registerCallback(contactCallback)
+            catBook.registerCallback(contactCallback)
             for (port in BROADCAST_PREPARE_PORTS) {
                 udpSender.send(
                     BROADCAST_IP, port,

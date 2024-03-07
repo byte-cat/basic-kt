@@ -2,7 +2,7 @@ package com.github.bytecat.contact
 
 import java.util.LinkedList
 
-class ContactBook {
+class CatBook {
 
     private val contacts = LinkedList<Contact>()
 
