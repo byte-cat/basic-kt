@@ -171,11 +171,11 @@ open class ByteCat {
     private fun dispatchReceive(data: ByteArray, handler: (event: String, jsonObj: JSONObject) -> Unit) {
         val text = String(data)
         val jsonObj = JSONObject.parseObject(text)
-        val byteHoleId = jsonObj.getString("byteHoleId")
+        val byteHoleId = jsonObj.getString(KEY_BYTE_CAT_ID)
         if (this.myCatId == byteHoleId) {
             return
         }
-        val event = jsonObj.getString("event")
+        val event = jsonObj.getString(KEY_EVENT)
         handler.invoke(event, jsonObj)
     }
 
