@@ -137,6 +137,10 @@ open class ByteCat {
                 udpSender.send(BROADCAST_IP, port, protocol.bye2All(byteHoleId))
             }
             contactBook.unregisterCallback(contactCallback)
+
+            broadcastReceiver.close()
+            messageReceiver.close()
+            udpSender.close()
         }
     }
 
