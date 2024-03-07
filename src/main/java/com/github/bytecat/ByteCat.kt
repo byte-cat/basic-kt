@@ -154,6 +154,9 @@ open class ByteCat {
     }
 
     fun refresh() {
+        if (catBook.cats.isEmpty()) {
+            return
+        }
         handler.post {
             catBook.cats.forEach {
                 val event = protocol.hi2YouAndCallback(myCatId)
