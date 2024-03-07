@@ -40,19 +40,19 @@ open class ByteCat {
                 when(event) {
                     EVENT_HI2A -> {
 
-                        val byteHoleId = jsonObj.getString(KEY_BYTE_HOLE_ID)
+                        val catId = jsonObj.getString(KEY_BYTE_CAT_ID)
                         val sysUserName = jsonObj.getString(KEY_SYS_USER_NAME)
                         val osName = jsonObj.getString(KEY_OS_NAME)
 
                         val broadcastPort = jsonObj.getIntValue(KEY_BROADCAST_PORT)
                         val messagePort = jsonObj.getIntValue(KEY_MESSAGE_PORT)
 
-                        contactBook.addContact(byteHoleId, sysUserName, osName, fromIp, broadcastPort, messagePort)
+                        contactBook.addContact(catId, sysUserName, osName, fromIp, broadcastPort, messagePort)
 
-                        udpSender.send(fromIp, messagePort, protocol.hi2You(byteHoleId, broadcastReceiver.port, messageReceiver.port))
+                        udpSender.send(fromIp, messagePort, protocol.hi2You(myCatId, broadcastReceiver.port, messageReceiver.port))
                     }
                     EVENT_BYE2A -> {
-                        val byteHoleId = jsonObj.getString(KEY_BYTE_HOLE_ID)
+                        val byteHoleId = jsonObj.getString(KEY_BYTE_CAT_ID)
                         contactBook.removeContact(byteHoleId)
                     }
                 }
@@ -70,7 +70,7 @@ open class ByteCat {
             dispatchReceive(data) {event, jsonObj ->
                 when(event) {
                     EVENT_HI2U -> {
-                        val byteHoleId = jsonObj.getString(KEY_BYTE_HOLE_ID)
+                        val byteHoleId = jsonObj.getString(KEY_BYTE_CAT_ID)
                         val sysUserName = jsonObj.getString(KEY_SYS_USER_NAME)
                         val osName = jsonObj.getString(KEY_OS_NAME)
 
@@ -91,7 +91,7 @@ open class ByteCat {
 
     private val udpSender by lazy { UDPSender() }
 
-    private val byteHoleId = UUID.randomUUID().toString()
+    private val myCatId = UUID.randomUUID().toString()
 
     @Volatile
     private var isReady = false
@@ -134,7 +134,7 @@ open class ByteCat {
     fun shutdown() {
         handler.post {
             for (port in BROADCAST_PREPARE_PORTS) {
-                udpSender.send(BROADCAST_IP, port, protocol.bye2All(byteHoleId))
+                udpSender.send(BROADCAST_IP, port, protocol.bye2All(myCatId))
             }
             contactBook.unregisterCallback(contactCallback)
 
@@ -160,7 +160,7 @@ open class ByteCat {
             for (port in BROADCAST_PREPARE_PORTS) {
                 udpSender.send(
                     BROADCAST_IP, port,
-                    protocol.hi2All(byteHoleId, broadcastReceiver.port, messageReceiver.port)
+                    protocol.hi2All(myCatId, broadcastReceiver.port, messageReceiver.port)
                 )
             }
         }
@@ -172,7 +172,7 @@ open class ByteCat {
         val text = String(data)
         val jsonObj = JSONObject.parseObject(text)
         val byteHoleId = jsonObj.getString("byteHoleId")
-        if (this.byteHoleId == byteHoleId) {
+        if (this.myCatId == byteHoleId) {
             return
         }
         val event = jsonObj.getString("event")
