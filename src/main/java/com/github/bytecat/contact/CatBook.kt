@@ -12,7 +12,7 @@ class CatBook {
 
     fun addContact(name: String, system: String,
                    ip: String, broadcastPort: Int, messagePort: Int) {
-        addContact(Contact(name, system, ip, broadcastPort, messagePort))
+        addContact(Contact(ip, name, system, broadcastPort, messagePort))
     }
 
     fun addContact(contact: Contact) {
