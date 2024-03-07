@@ -4,9 +4,11 @@ import java.util.LinkedList
 
 class CatBook {
 
-    private val contacts = LinkedList<Contact>()
+    private val catList = LinkedList<Contact>()
 
     private val callbacks = LinkedList<Callback>()
+
+    val cats: List<Contact> get() = catList
 
     fun addContact(id: String, name: String, system: String,
                    ip: String, broadcastPort: Int, messagePort: Int) {
@@ -14,21 +16,21 @@ class CatBook {
     }
 
     fun addContact(contact: Contact) {
-        if (contacts.contains(contact)) {
+        if (catList.contains(contact)) {
             return
         }
-        contacts.add(contact)
+        catList.add(contact)
         callbacks.forEach {
             it.onContactAdd(contact)
         }
     }
 
     fun removeContact(id: String) {
-        val index = contacts.indexOfFirst {
+        val index = catList.indexOfFirst {
             it.id == id
         }
-        if (index >= 0 && index < contacts.size) {
-            val contact = contacts.removeAt(index)
+        if (index >= 0 && index < catList.size) {
+            val contact = catList.removeAt(index)
             callbacks.forEach {
                 it.onContactRemove(contact)
             }
@@ -36,7 +38,7 @@ class CatBook {
     }
 
     fun broadcastPorts(): List<Int> {
-        return contacts.map {
+        return catList.map {
             it.broadcastPort
         }.distinct()
     }
