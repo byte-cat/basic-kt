@@ -1,23 +1,36 @@
 package com.github.bytecat
 
-import java.net.Inet4Address
-import java.net.NetworkInterface
+import com.github.bytecat.contact.Contact
 
-fun main(vararg args: String) {
-    println("ip=${getLocalIP()}")
+val byteCat = object : ByteCat() {
+    override val debugger: IDebugger = object : IDebugger {
+        override fun onBroadcastReady() {
+            println("onBroadcastReady")
+        }
+
+        override fun onBroadcastReceived(fromIp: String, data: ByteArray) {
+            println("onBroadcastReceived fromIp=$fromIp")
+        }
+
+        override fun onMessageReady() {
+            println("onMessageReady")
+        }
+
+        override fun onMessageReceived(fromIp: String, data: ByteArray) {
+            println("onMessageReceived fromIp=$fromIp")
+        }
+
+        override fun onContactAdd(contact: Contact) {
+            println("onContactAdd")
+        }
+
+        override fun onContactRemove(contact: Contact) {
+            println("onContactRemove")
+        }
+
+    }
 }
 
-fun getLocalIP(): String {
-    try {
-        for (intf in NetworkInterface.getNetworkInterfaces()) {
-            for (inetAddress in intf.inetAddresses) {
-                if (!inetAddress.isLoopbackAddress && inetAddress is Inet4Address) {
-                    return inetAddress.hostAddress
-                }
-            }
-        }
-    } catch (ex: Exception) {
-        ex.printStackTrace()
-    }
-    return "0.0.0.0"
+fun main(vararg args: String) {
+    byteCat.startup()
 }

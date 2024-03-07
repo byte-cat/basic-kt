@@ -16,6 +16,7 @@ class UDPSender {
 
     fun send(ip: String, port: Int, data: ByteArray) {
         val packet = DatagramPacket(data, data.size, InetAddress.getByName(ip), port)
+        socket.broadcast = true
         socket.send(packet)
     }
 

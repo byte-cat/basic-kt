@@ -41,6 +41,12 @@ class CatBook {
         }
     }
 
+    fun findByIP(ip: String): Contact? {
+        return catList.firstOrNull {
+            it.ipAddress == ip
+        }
+    }
+
     fun broadcastPorts(): List<Int> {
         return catList.map {
             it.broadcastPort

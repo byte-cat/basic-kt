@@ -82,15 +82,19 @@ open class ByteCat {
                 when(event) {
                     EVENT_HI2U -> {
                         val callMeBack = jsonObj.getBooleanValue(KEY_CALL_ME_BACK, false)
-                        val messagePort = jsonObj.getIntValue(KEY_MESSAGE_PORT)
+
                         if (callMeBack) {
-                            val eventId = jsonObj.getString(KEY_EVENT_ID)
-                            udpSender.send(fromIp, messagePort, protocol.callBack(eventId))
+                            val cat = catBook.findByIP(fromIp)
+                            if (cat != null) {
+                                val eventId = jsonObj.getString(KEY_EVENT_ID)
+                                udpSender.send(fromIp, cat.messagePort, protocol.callBack(eventId))
+                            }
                         } else {
                             val sysUserName = jsonObj.getString(KEY_SYS_USER_NAME)
                             val osName = jsonObj.getString(KEY_OS_NAME)
 
                             val broadcastPort = jsonObj.getIntValue(KEY_BROADCAST_PORT)
+                            val messagePort = jsonObj.getIntValue(KEY_MESSAGE_PORT)
 
                             catBook.addContact(sysUserName, osName, fromIp, broadcastPort, messagePort)
                         }
