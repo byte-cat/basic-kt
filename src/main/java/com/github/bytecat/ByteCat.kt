@@ -211,6 +211,8 @@ open class ByteCat {
             for (port in BROADCAST_PREPARE_PORTS) {
                 udpSender.send(BROADCAST_IP, port, Protocol.byeToAll())
             }
+
+            catCallback = null
             catBook.unregisterCallback(contactCallback)
 
             refreshTimer?.cancel()
