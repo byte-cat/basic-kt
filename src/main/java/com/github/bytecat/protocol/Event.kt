@@ -27,13 +27,18 @@ class Event(
         json.getString(KEY_EVENT),
         json.getString(KEY_EVENT_ID),
         json.getLong(KEY_TIMESTAMP),
-        json.getJSONObject(KEY_DATA)
+        if (json.containsKey(KEY_DATA)) {
+            json.getJSONObject(KEY_DATA)
+        } else {
+            null
+        }
     )
 
     fun toJSONObject(): JSONObject {
         return JSONObject().apply {
             put(KEY_EVENT, name)
             put(KEY_EVENT_ID, id)
+            put(KEY_TIMESTAMP, timestamp)
             if (dataJson != null) {
                 put(KEY_DATA, dataJson)
             }
