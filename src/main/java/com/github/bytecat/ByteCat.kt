@@ -103,7 +103,8 @@ open class ByteCat {
                         val callBackId = jsonObj.getString(KEY_CALL_BACK_ID)
                         refreshingCats.remove(callBackId)
                         if (refreshingCats.isEmpty()) {
-                            refreshTimer.cancel()
+                            refreshTimer?.cancel()
+                            refreshTimer = null
                         }
                     }
                 }
@@ -140,7 +141,7 @@ open class ByteCat {
 
     private val refreshingCats = HashMap<String, Contact>()
 
-    private val refreshTimer = Timer()
+    private var refreshTimer: Timer? = null
 
     fun startup() {
         for (port in BROADCAST_PREPARE_PORTS) {
@@ -177,7 +178,12 @@ open class ByteCat {
 
                 refreshingCats[event.eventId] = it
             }
-            refreshTimer.schedule(object : TimerTask() {
+            if (refreshTimer != null) {
+                refreshTimer?.cancel()
+                refreshTimer = null
+            }
+            refreshTimer = Timer()
+            refreshTimer?.schedule(object : TimerTask() {
                 override fun run() {
                     if (refreshingCats.isNotEmpty()) {
                         for ((_, cat) in refreshingCats) {
@@ -197,7 +203,8 @@ open class ByteCat {
             }
             catBook.unregisterCallback(contactCallback)
 
-            refreshTimer.cancel()
+            refreshTimer?.cancel()
+            refreshTimer = null
 
             broadcastReceiver.close()
             messageReceiver.close()
