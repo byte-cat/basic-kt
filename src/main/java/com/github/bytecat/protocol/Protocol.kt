@@ -28,7 +28,7 @@ object Protocol {
         return Event(EVENT_HI2U, HiCallBack())
     }
     fun byeToAll(): Event {
-        return Event(EVENT_BYE2A)
+        return Event(name = EVENT_BYE2A, dataJson = null)
     }
     fun callBack(callBackId: String): Event {
         return Event(EVENT_CALL_BACK, CallBack(callBackId))
