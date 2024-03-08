@@ -1,6 +1,6 @@
 package com.github.bytecat
 
-import com.github.bytecat.contact.Contact
+import com.github.bytecat.contact.Cat
 
 interface IDebugger {
 
@@ -10,7 +10,7 @@ interface IDebugger {
     fun onMessageReady()
     fun onMessageReceived(fromIp: String, data: ByteArray)
 
-    fun onContactAdd(contact: Contact)
-    fun onContactRemove(contact: Contact)
+    fun onContactAdd(cat: Cat)
+    fun onContactRemove(cat: Cat)
 
 }

@@ -4,28 +4,28 @@ import java.util.LinkedList
 
 class CatBook {
 
-    private val catList = LinkedList<Contact>()
+    private val catList = LinkedList<Cat>()
 
     private val callbacks = LinkedList<Callback>()
 
-    val cats: List<Contact> get() = catList
+    val cats: List<Cat> get() = catList
 
     fun addContact(name: String, system: String,
                    ip: String, broadcastPort: Int, messagePort: Int) {
-        addContact(Contact(ip, name, system, broadcastPort, messagePort))
+        addContact(Cat(ip, name, system, broadcastPort, messagePort))
     }
 
-    fun addContact(contact: Contact) {
-        if (catList.contains(contact)) {
-            catList[catList.indexOf(contact)] = contact
+    fun addContact(cat: Cat) {
+        if (catList.contains(cat)) {
+            catList[catList.indexOf(cat)] = cat
             callbacks.forEach {
-                it.onContactUpdate(contact)
+                it.onContactUpdate(cat)
             }
             return
         }
-        catList.add(contact)
+        catList.add(cat)
         callbacks.forEach {
-            it.onContactAdd(contact)
+            it.onContactAdd(cat)
         }
     }
 
@@ -41,7 +41,7 @@ class CatBook {
         }
     }
 
-    fun findByIP(ip: String): Contact? {
+    fun findByIP(ip: String): Cat? {
         return catList.firstOrNull {
             it.ipAddress == ip
         }
@@ -65,9 +65,9 @@ class CatBook {
     }
 
     interface Callback {
-        fun onContactAdd(contact: Contact)
-        fun onContactUpdate(contact: Contact)
-        fun onContactRemove(contact: Contact)
+        fun onContactAdd(cat: Cat)
+        fun onContactUpdate(cat: Cat)
+        fun onContactRemove(cat: Cat)
     }
 
 }

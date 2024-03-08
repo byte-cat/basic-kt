@@ -1,7 +1,7 @@
 package com.github.bytecat
 
 import com.alibaba.fastjson2.JSONObject
-import com.github.bytecat.contact.Contact
+import com.github.bytecat.contact.Cat
 import com.github.bytecat.contact.CatBook
 import com.github.bytecat.handler.IHandler
 import com.github.bytecat.handler.SimpleHandler
@@ -10,7 +10,6 @@ import com.github.bytecat.protocol.*
 import com.github.bytecat.utils.getLocalIP
 import java.util.Timer
 import java.util.TimerTask
-import java.util.UUID
 
 open class ByteCat {
 
@@ -124,22 +123,22 @@ open class ByteCat {
 
     private val contactCallback = object : CatBook.Callback {
 
-        override fun onContactAdd(contact: Contact) {
-            debugger?.onContactAdd(contact)
+        override fun onContactAdd(cat: Cat) {
+            debugger?.onContactAdd(cat)
         }
 
-        override fun onContactUpdate(contact: Contact) {
+        override fun onContactUpdate(cat: Cat) {
 
         }
 
-        override fun onContactRemove(contact: Contact) {
-            debugger?.onContactRemove(contact)
+        override fun onContactRemove(cat: Cat) {
+            debugger?.onContactRemove(cat)
         }
     }
 
     val catBook = CatBook()
 
-    private val refreshingCats = HashMap<String, Contact>()
+    private val refreshingCats = HashMap<String, Cat>()
 
     private var refreshTimer: Timer? = null
 

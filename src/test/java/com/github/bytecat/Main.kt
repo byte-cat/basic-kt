@@ -1,6 +1,6 @@
 package com.github.bytecat
 
-import com.github.bytecat.contact.Contact
+import com.github.bytecat.contact.Cat
 
 val byteCat = object : ByteCat() {
     override val debugger: IDebugger = object : IDebugger {
@@ -20,11 +20,11 @@ val byteCat = object : ByteCat() {
             println("onMessageReceived fromIp=$fromIp")
         }
 
-        override fun onContactAdd(contact: Contact) {
+        override fun onContactAdd(cat: Cat) {
             println("onContactAdd")
         }
 
-        override fun onContactRemove(contact: Contact) {
+        override fun onContactRemove(cat: Cat) {
             println("onContactRemove")
         }
 
