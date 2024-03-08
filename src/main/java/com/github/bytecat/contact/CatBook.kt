@@ -41,7 +41,7 @@ class CatBook {
         }
     }
 
-    fun findByIP(ip: String): Cat? {
+    fun findByIp(ip: String): Cat? {
         return catList.firstOrNull {
             it.ipAddress == ip
         }

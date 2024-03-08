@@ -1,4 +1,4 @@
-package com.github.bytecat
+package com.github.bytecat.utils
 
 import com.github.bytecat.contact.Cat
 

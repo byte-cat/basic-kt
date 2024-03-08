@@ -1,6 +1,7 @@
 package com.github.bytecat
 
 import com.github.bytecat.contact.Cat
+import com.github.bytecat.utils.IDebugger
 
 val byteCat = object : ByteCat() {
     override val debugger: IDebugger = object : IDebugger {

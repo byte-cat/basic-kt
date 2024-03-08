@@ -1,10 +1,10 @@
-package com.github.bytecat
+package com.github.bytecat.udp
 
 import java.net.DatagramPacket
 import java.net.DatagramSocket
 import java.net.InetAddress
 
-class UDPSender {
+open class UDPSender {
 
     var isOpen = false
         private set

@@ -2,6 +2,8 @@ package com.github.bytecat
 
 import org.junit.jupiter.api.Test
 import com.github.bytecat.handler.SimpleHandler
+import com.github.bytecat.udp.UDPReceiver
+import com.github.bytecat.udp.UDPSender
 
 class TestUDPReceiver {
 

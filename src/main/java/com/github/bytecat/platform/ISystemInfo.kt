@@ -1,6 +1,6 @@
 package com.github.bytecat.platform
 
-interface IPlatform {
+interface ISystemInfo {
     val systemUserName: String
     val system: String
 }
