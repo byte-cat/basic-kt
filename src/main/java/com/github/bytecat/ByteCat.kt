@@ -236,6 +236,8 @@ open class ByteCat {
             return
         }
         handler.post {
+            catCallback?.onReady(Cat(myLocalIP, systemInfo.systemUserName, systemInfo.system,
+                broadcastReceiver.port, messageReceiver.port))
             catBook.registerCallback(contactCallback)
             for (port in BROADCAST_PREPARE_PORTS) {
                 udpSender.send(
@@ -255,6 +257,7 @@ open class ByteCat {
     }
 
     interface Callback {
+        fun onReady(myCat: Cat)
         fun onCatMessage(cat: Cat, text: String)
     }
 
