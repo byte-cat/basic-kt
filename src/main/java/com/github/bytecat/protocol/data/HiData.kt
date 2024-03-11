@@ -3,7 +3,7 @@ package com.github.bytecat.protocol.data
 import com.alibaba.fastjson2.JSONObject
 import com.github.bytecat.platform.ISystemInfo
 
-class Hi(
+class HiData(
     val broadcastPort: Int, val messagePort: Int,
     val systemUserName: String, val osName: String
 ) : Data {
@@ -14,8 +14,8 @@ class Hi(
         const val KEY_SYS_USER_NAME = "sysUserName"
         const val KEY_OS_NAME = "osName"
 
-        fun parse(json: JSONObject): Hi {
-            return Hi(
+        fun parse(json: JSONObject): HiData {
+            return HiData(
                 json.getIntValue(KEY_BROADCAST_PORT),
                 json.getIntValue(KEY_MESSAGE_PORT),
                 json.getString(KEY_SYS_USER_NAME),

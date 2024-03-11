@@ -2,13 +2,13 @@ package com.github.bytecat.protocol.data
 
 import com.alibaba.fastjson2.JSONObject
 
-class CallBack(val id: String) : Data {
+class CallBackData(val id: String) : Data {
 
     companion object {
         const val KEY_CALL_BACK_ID = "callBackId"
 
-        fun parse(json: JSONObject): CallBack {
-            return CallBack(
+        fun parse(json: JSONObject): CallBackData {
+            return CallBackData(
                 json.getString(KEY_CALL_BACK_ID)
             )
         }

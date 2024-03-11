@@ -5,12 +5,13 @@ import com.github.bytecat.contact.Cat
 import com.github.bytecat.contact.CatBook
 import com.github.bytecat.handler.IHandler
 import com.github.bytecat.handler.SimpleHandler
+import com.github.bytecat.message.MessageBox
 import com.github.bytecat.platform.ISystemInfo
 import com.github.bytecat.protocol.*
-import com.github.bytecat.protocol.data.CallBack
-import com.github.bytecat.protocol.data.Hi
-import com.github.bytecat.protocol.data.HiCallBack
-import com.github.bytecat.protocol.data.Message
+import com.github.bytecat.protocol.data.CallBackData
+import com.github.bytecat.protocol.data.HiData
+import com.github.bytecat.protocol.data.HiCallBackData
+import com.github.bytecat.protocol.data.MessageData
 import com.github.bytecat.udp.UDPReceiver
 import com.github.bytecat.utils.IDebugger
 import com.github.bytecat.utils.getLocalIP
@@ -51,11 +52,11 @@ open class ByteCat {
             dispatchReceive(data) { event ->
                 when(event.name) {
                     EVENT_HI2A -> {
-                        val hi = Hi.parse(event.dataJson!!)
+                        val hiData = HiData.parse(event.dataJson!!)
 
-                        catBook.addCat(hi.systemUserName, hi.osName, fromIp, hi.broadcastPort, hi.messagePort)
+                        catBook.addCat(hiData.systemUserName, hiData.osName, fromIp, hiData.broadcastPort, hiData.messagePort)
 
-                        udpSender.send(fromIp, hi.messagePort, Protocol.hiToYou(
+                        udpSender.send(fromIp, hiData.messagePort, Protocol.hiToYou(
                             broadcastReceiver.port,
                             messageReceiver.port,
                             systemInfo
@@ -80,28 +81,29 @@ open class ByteCat {
             dispatchReceive(data) { event ->
                 when(event.name) {
                     EVENT_HI2U -> {
-                        val callBack = HiCallBack.parse(event.dataJson!!)
+                        val callBack = HiCallBackData.parse(event.dataJson!!)
                         if (callBack.callMeBack) {
                             val cat = catBook.findCatByIp(fromIp)
                             if (cat != null) {
                                 udpSender.send(fromIp, cat.messagePort, Protocol.callBack(event.id))
                             }
                         } else {
-                            val hi = Hi.parse(event.dataJson)
-                            catBook.addCat(hi.systemUserName, hi.osName, fromIp, hi.broadcastPort, hi.messagePort)
+                            val hiData = HiData.parse(event.dataJson)
+                            catBook.addCat(hiData.systemUserName, hiData.osName, fromIp, hiData.broadcastPort, hiData.messagePort)
                         }
                     }
                     EVENT_CALL_BACK -> {
-                        val callBack = CallBack.parse(event.dataJson!!)
-                        refreshingCats.remove(callBack.id)
+                        val callBackData = CallBackData.parse(event.dataJson!!)
+                        refreshingCats.remove(callBackData.id)
                         if (refreshingCats.isEmpty()) {
                             refreshTimer?.cancel()
                             refreshTimer = null
                         }
                     }
                     EVENT_MESSAGE -> {
-                        val msg = Message.parse(event.dataJson!!)
+                        val msg = MessageData.parse(event.dataJson!!)
                         catBook.findCatByIp(fromIp)?.run {
+                            MessageBox.obtain(this).onMessageReceived(msg)
                             catCallback?.onCatMessage(this, msg.text)
                         }
                     }
