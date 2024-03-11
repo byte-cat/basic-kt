@@ -2,8 +2,8 @@ package com.github.bytecat.contact
 
 import com.github.bytecat.Platform
 
-data class Cat(
-    val ipAddress: String,
+open class Cat(
+    val ip: String,
     val name: String,
     val system: String,
     val broadcastPort: Int,
@@ -21,10 +21,10 @@ data class Cat(
     }
 
     override fun equals(other: Any?): Boolean {
-        return other is Cat && other.ipAddress == ipAddress
+        return other is Cat && other.ip == ip
     }
 
     override fun hashCode(): Int {
-        return ipAddress.hashCode()
+        return ip.hashCode()
     }
 }

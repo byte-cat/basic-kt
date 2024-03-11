@@ -31,7 +31,7 @@ class CatBook {
 
     fun removeContact(ip: String) {
         val index = catList.indexOfFirst {
-            it.ipAddress == ip
+            it.ip == ip
         }
         if (index >= 0 && index < catList.size) {
             val contact = catList.removeAt(index)
@@ -43,7 +43,7 @@ class CatBook {
 
     fun findByIp(ip: String): Cat? {
         return catList.firstOrNull {
-            it.ipAddress == ip
+            it.ip == ip
         }
     }
 

@@ -174,7 +174,7 @@ open class ByteCat {
         handler.post {
             catBook.cats.forEach {
                 val event = Protocol.hiToYouCallMeBack()
-                udpSender.send(it.ipAddress, it.messagePort, event.toJSONObject().toString())
+                udpSender.send(it.ip, it.messagePort, event.toJSONObject().toString())
 
                 refreshingCats[event.id] = it
             }
@@ -187,7 +187,7 @@ open class ByteCat {
                 override fun run() {
                     if (refreshingCats.isNotEmpty()) {
                         for ((_, cat) in refreshingCats) {
-                            catBook.removeContact(cat.ipAddress)
+                            catBook.removeContact(cat.ip)
                         }
                         refreshingCats.clear()
                     }
@@ -198,7 +198,7 @@ open class ByteCat {
 
     fun sendMessage(cat: Cat, text: String) {
         handler.post{
-            udpSender.sendMessage(cat.ipAddress, cat.messagePort, text)
+            udpSender.sendMessage(cat.ip, cat.messagePort, text)
         }
     }
 
