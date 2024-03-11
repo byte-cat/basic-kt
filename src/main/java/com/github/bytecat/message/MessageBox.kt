@@ -4,14 +4,14 @@ import com.github.bytecat.contact.Cat
 import com.github.bytecat.protocol.data.MessageData
 import java.util.LinkedList
 
-class MessageBox private constructor() {
+class MessageBox private constructor(private val cat: Cat) {
     companion object {
 
         private val boxes = HashMap<Cat, MessageBox>()
 
         fun obtain(cat: Cat): MessageBox {
             return boxes.getOrPut(cat) {
-                MessageBox()
+                MessageBox(cat)
             }
         }
     }
@@ -24,7 +24,7 @@ class MessageBox private constructor() {
         val message = Message.fromReceive(messageData)
         messages.add(message)
         callbacks.forEach {
-            it.onMessageReceived(message)
+            it.onMessageReceived(cat, message)
         }
     }
 
@@ -40,7 +40,7 @@ class MessageBox private constructor() {
     }
 
     interface Callback {
-        fun onMessageReceived(messages: Message<*>)
+        fun onMessageReceived(cat: Cat, messages: Message<*>)
     }
 
 }
