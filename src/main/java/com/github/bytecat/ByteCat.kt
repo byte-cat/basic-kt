@@ -104,7 +104,6 @@ open class ByteCat {
                         val msg = MessageData.parse(event.dataJson!!)
                         catBook.findCatByIp(fromIp)?.run {
                             MessageBox.obtain(this).onMessageReceived(msg)
-                            catCallback?.onCatMessage(this, msg.text)
                         }
                     }
                 }
@@ -260,7 +259,6 @@ open class ByteCat {
 
     interface Callback {
         fun onReady(myCat: Cat)
-        fun onCatMessage(cat: Cat, text: String)
     }
 
 }
