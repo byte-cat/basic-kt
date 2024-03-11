@@ -40,7 +40,7 @@ class MessageBox private constructor(private val cat: Cat) {
     }
 
     interface Callback {
-        fun onMessageReceived(cat: Cat, messages: Message<*>)
+        fun onMessageReceived(cat: Cat, message: Message<*>)
     }
 
 }
