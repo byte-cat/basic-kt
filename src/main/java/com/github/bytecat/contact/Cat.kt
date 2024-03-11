@@ -3,11 +3,11 @@ package com.github.bytecat.contact
 import com.github.bytecat.Platform
 
 open class Cat(
-    val ip: String,
-    val name: String,
-    val system: String,
-    val broadcastPort: Int,
-    val messagePort: Int
+    protected var ip: String,
+    protected val name: String,
+    protected val system: String,
+    protected val broadcastPort: Int,
+    protected val messagePort: Int
 ) {
 
     val platform: Platform get() {
