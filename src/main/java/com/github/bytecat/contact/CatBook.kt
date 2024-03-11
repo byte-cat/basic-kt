@@ -10,12 +10,12 @@ class CatBook {
 
     val cats: List<Cat> get() = catList
 
-    fun addContact(name: String, system: String,
-                   ip: String, broadcastPort: Int, messagePort: Int) {
-        addContact(Cat(ip, name, system, broadcastPort, messagePort))
+    fun addCat(name: String, system: String,
+               ip: String, broadcastPort: Int, messagePort: Int) {
+        addCat(Cat(ip, name, system, broadcastPort, messagePort))
     }
 
-    fun addContact(cat: Cat) {
+    fun addCat(cat: Cat) {
         if (catList.contains(cat)) {
             catList[catList.indexOf(cat)] = cat
             callbacks.forEach {
@@ -29,7 +29,7 @@ class CatBook {
         }
     }
 
-    fun removeContact(ip: String) {
+    fun removeCat(ip: String) {
         val index = catList.indexOfFirst {
             it.ip == ip
         }
@@ -41,7 +41,7 @@ class CatBook {
         }
     }
 
-    fun findByIp(ip: String): Cat? {
+    fun findCatByIp(ip: String): Cat? {
         return catList.firstOrNull {
             it.ip == ip
         }

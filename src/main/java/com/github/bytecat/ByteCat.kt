@@ -53,7 +53,7 @@ open class ByteCat {
                     EVENT_HI2A -> {
                         val hi = Hi.parse(event.dataJson!!)
 
-                        catBook.addContact(hi.systemUserName, hi.osName, fromIp, hi.broadcastPort, hi.messagePort)
+                        catBook.addCat(hi.systemUserName, hi.osName, fromIp, hi.broadcastPort, hi.messagePort)
 
                         udpSender.send(fromIp, hi.messagePort, Protocol.hiToYou(
                             broadcastReceiver.port,
@@ -62,7 +62,7 @@ open class ByteCat {
                         ))
                     }
                     EVENT_BYE2A -> {
-                        catBook.removeContact(fromIp)
+                        catBook.removeCat(fromIp)
                     }
                 }
             }
@@ -82,13 +82,13 @@ open class ByteCat {
                     EVENT_HI2U -> {
                         val callBack = HiCallBack.parse(event.dataJson!!)
                         if (callBack.callMeBack) {
-                            val cat = catBook.findByIp(fromIp)
+                            val cat = catBook.findCatByIp(fromIp)
                             if (cat != null) {
                                 udpSender.send(fromIp, cat.messagePort, Protocol.callBack(event.id))
                             }
                         } else {
                             val hi = Hi.parse(event.dataJson)
-                            catBook.addContact(hi.systemUserName, hi.osName, fromIp, hi.broadcastPort, hi.messagePort)
+                            catBook.addCat(hi.systemUserName, hi.osName, fromIp, hi.broadcastPort, hi.messagePort)
                         }
                     }
                     EVENT_CALL_BACK -> {
@@ -101,7 +101,7 @@ open class ByteCat {
                     }
                     EVENT_MESSAGE -> {
                         val msg = Message.parse(event.dataJson!!)
-                        catBook.findByIp(fromIp)?.run {
+                        catBook.findCatByIp(fromIp)?.run {
                             catCallback?.onCatMessage(this, msg.text)
                         }
                     }
@@ -187,7 +187,7 @@ open class ByteCat {
                 override fun run() {
                     if (refreshingCats.isNotEmpty()) {
                         for ((_, cat) in refreshingCats) {
-                            catBook.removeContact(cat.ip)
+                            catBook.removeCat(cat.ip)
                         }
                         refreshingCats.clear()
                     }

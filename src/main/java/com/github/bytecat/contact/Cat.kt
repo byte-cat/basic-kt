@@ -2,13 +2,20 @@ package com.github.bytecat.contact
 
 import com.github.bytecat.Platform
 
-open class Cat(
-    protected var ip: String,
-    protected val name: String,
-    protected val system: String,
-    protected val broadcastPort: Int,
-    protected val messagePort: Int
-) {
+open class Cat(ip: String, name: String, system: String, broadcastPort: Int, messagePort: Int) {
+
+    var ip: String = ip
+        protected set
+    var name: String = name
+        protected set
+    var system: String = system
+        protected set
+
+    var broadcastPort: Int = broadcastPort
+        protected set
+
+    var messagePort: Int = messagePort
+        protected set
 
     val platform: Platform get() {
         return when {
