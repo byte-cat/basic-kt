@@ -114,7 +114,7 @@ open class ByteCat {
     private lateinit var broadcastReceiver: UDPReceiver
     private lateinit var messageReceiver: UDPReceiver
 
-    open val handler: IHandler by lazy { SimpleHandler().also { it.start() } }
+    open val handler: IHandler by lazy { SimpleHandler() }
 
     private val udpSender by lazy { CatSender() }
 

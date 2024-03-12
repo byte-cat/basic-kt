@@ -1,25 +1,23 @@
 package com.github.bytecat.handler
 
-import java.util.concurrent.BlockingQueue
-import java.util.concurrent.Executors
-import java.util.concurrent.LinkedBlockingQueue
+import java.util.concurrent.*
+import java.util.concurrent.ThreadPoolExecutor.AbortPolicy
 
 class SimpleHandler : IHandler {
 
-    private val executor by lazy { Executors.newSingleThreadExecutor() }
-
-    private val blockingQueue: BlockingQueue<Runnable> = LinkedBlockingQueue<Runnable>()
-
-    fun start() {
-        executor.execute {
-            while (true) {
-                val task = blockingQueue.take()
-                task.run()
-            }
-        }
+    private val executor by lazy {
+        ScheduledThreadPoolExecutor(1, AbortPolicy())
     }
 
     override fun post(task: Runnable) {
-        blockingQueue.put(task)
+        executor.schedule(task, 0L, TimeUnit.MILLISECONDS)
+    }
+
+    override fun post(delay: Long, task: Runnable) {
+        executor.schedule(task, delay, TimeUnit.MILLISECONDS)
+    }
+
+    override fun cancel(task: Runnable) {
+        executor.remove(task)
     }
 }

@@ -1,37 +1,13 @@
 package com.github.bytecat
 
-import com.github.bytecat.contact.Cat
-import com.github.bytecat.utils.IDebugger
-
-val byteCat = object : ByteCat() {
-    override val debugger: IDebugger = object : IDebugger {
-        override fun onBroadcastReady() {
-            println("onBroadcastReady")
-        }
-
-        override fun onBroadcastReceived(fromIp: String, data: ByteArray) {
-            println("onBroadcastReceived fromIp=$fromIp")
-        }
-
-        override fun onMessageReady() {
-            println("onMessageReady")
-        }
-
-        override fun onMessageReceived(fromIp: String, data: ByteArray) {
-            println("onMessageReceived fromIp=$fromIp")
-        }
-
-        override fun onContactAdd(cat: Cat) {
-            println("onContactAdd")
-        }
-
-        override fun onContactRemove(cat: Cat) {
-            println("onContactRemove")
-        }
-
-    }
-}
+import com.github.bytecat.handler.SimpleHandler
 
 fun main(vararg args: String) {
-    byteCat.startup()
+    val handler = SimpleHandler()
+    handler.post(100L) {
+        println("1111")
+    }
+    handler.post {
+        println("222")
+    }
 }
