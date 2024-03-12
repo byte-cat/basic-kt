@@ -1,7 +1,7 @@
 package com.github.bytecat.message
 
 import com.github.bytecat.contact.Cat
-import com.github.bytecat.protocol.data.MessageData
+import com.github.bytecat.protocol.data.TextData
 import java.util.LinkedList
 
 class MessageBox private constructor(private val cat: Cat) {
@@ -20,7 +20,7 @@ class MessageBox private constructor(private val cat: Cat) {
 
     private val callbacks = LinkedList<Callback>()
 
-    fun onMessageReceived(messageData: MessageData) {
+    fun onMessageReceived(messageData: TextData) {
         val message = Message.fromReceive(messageData)
         messages.add(message)
         callbacks.forEach {

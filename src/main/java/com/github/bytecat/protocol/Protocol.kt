@@ -4,7 +4,7 @@ import com.github.bytecat.platform.ISystemInfo
 import com.github.bytecat.protocol.data.CallBackData
 import com.github.bytecat.protocol.data.HiData
 import com.github.bytecat.protocol.data.HiCallBackData
-import com.github.bytecat.protocol.data.MessageData
+import com.github.bytecat.protocol.data.TextData
 
 const val EVENT_HI2A = "hi2a"
 const val EVENT_HI2U = "hi2u"
@@ -34,7 +34,7 @@ object Protocol {
     }
 
     fun message(text: String): Event {
-        return Event(EVENT_MESSAGE, MessageData(text))
+        return Event(EVENT_MESSAGE, TextData(text))
     }
 
 }

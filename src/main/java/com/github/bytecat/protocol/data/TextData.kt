@@ -2,12 +2,12 @@ package com.github.bytecat.protocol.data
 
 import com.alibaba.fastjson2.JSONObject
 
-class MessageData(val text: String) : Data {
+class TextData(val text: String) : Data {
 
     companion object {
         private const val KEY_TEXT = "text"
-        fun parse(json: JSONObject): MessageData {
-            return MessageData(
+        fun parse(json: JSONObject): TextData {
+            return TextData(
                 json.getString(KEY_TEXT)
             )
         }

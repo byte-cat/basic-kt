@@ -11,7 +11,7 @@ import com.github.bytecat.protocol.*
 import com.github.bytecat.protocol.data.CallBackData
 import com.github.bytecat.protocol.data.HiData
 import com.github.bytecat.protocol.data.HiCallBackData
-import com.github.bytecat.protocol.data.MessageData
+import com.github.bytecat.protocol.data.TextData
 import com.github.bytecat.udp.UDPReceiver
 import com.github.bytecat.utils.IDebugger
 import com.github.bytecat.utils.getLocalIP
@@ -101,7 +101,7 @@ open class ByteCat {
                         }
                     }
                     EVENT_MESSAGE -> {
-                        val msg = MessageData.parse(event.dataJson!!)
+                        val msg = TextData.parse(event.dataJson!!)
                         catBook.findCatByIp(fromIp)?.run {
                             MessageBox.obtain(this).onMessageReceived(msg)
                         }
