@@ -3,6 +3,7 @@ package com.github.bytecat.protocol.data
 import com.github.bytecat.ext.getMD5
 import org.json.JSONObject
 import java.io.File
+import java.io.InputStream
 import java.util.UUID
 
 class FileRequestData private constructor (
@@ -29,6 +30,12 @@ class FileRequestData private constructor (
 
         fun from(file: File): FileRequestData {
             return FileRequestData(name = file.name, size = file.length(), md5 = file.getMD5())
+        }
+
+        fun from(fileName: String, inputStream: InputStream): FileRequestData {
+            val size = inputStream.available()
+            val md5 = inputStream.getMD5()
+            return FileRequestData(name = fileName, size = size.toLong(), md5 = md5)
         }
 
     }
