@@ -241,7 +241,7 @@ open class ByteCat {
 
     fun rejectFileRequest(cat: Cat, fileReq: FileRequestData) {
         handler.post {
-            udpSender.send(cat.ip, messageReceiver.port, Protocol.fileResponseReject(fileReq).toJSONObject())
+            udpSender.send(cat.ip, cat.messagePort, Protocol.fileResponseReject(fileReq).toJSONObject())
         }
     }
 
