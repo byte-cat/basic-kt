@@ -27,7 +27,7 @@ class Event(
         json.getString(KEY_EVENT),
         json.getString(KEY_EVENT_ID),
         json.getLong(KEY_TIMESTAMP),
-        if (json.get(KEY_DATA) != null) {
+        if (json.opt(KEY_DATA) != null) {
             json.getJSONObject(KEY_DATA)
         } else {
             null
