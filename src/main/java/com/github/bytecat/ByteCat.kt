@@ -96,8 +96,7 @@ open class ByteCat {
                         val callBackData = CallBackData.parse(event.dataJson!!)
                         refreshingCats.remove(callBackData.id)
                         if (refreshingCats.isEmpty()) {
-                            refreshTimer?.cancel()
-                            refreshTimer = null
+                            handler.cancel(refreshTask);
                         }
                     }
                     EVENT_MESSAGE -> {
@@ -138,9 +137,15 @@ open class ByteCat {
 
     val catBook = CatBook()
 
+    private val refreshTask = Runnable {
+        if (refreshingCats.isNotEmpty()) {
+            for ((_, cat) in refreshingCats) {
+                catBook.removeCat(cat.ip)
+            }
+            refreshingCats.clear()
+        }
+    }
     private val refreshingCats = HashMap<String, Cat>()
-
-    private var refreshTimer: Timer? = null
 
     private var catCallback: Callback? = null
 
@@ -179,21 +184,7 @@ open class ByteCat {
 
                 refreshingCats[event.id] = it
             }
-            if (refreshTimer != null) {
-                refreshTimer?.cancel()
-                refreshTimer = null
-            }
-            refreshTimer = Timer()
-            refreshTimer?.schedule(object : TimerTask() {
-                override fun run() {
-                    if (refreshingCats.isNotEmpty()) {
-                        for ((_, cat) in refreshingCats) {
-                            catBook.removeCat(cat.ip)
-                        }
-                        refreshingCats.clear()
-                    }
-                }
-            }, 1000L)
+            handler.post(delay = 1000L, refreshTask)
         }
     }
 
@@ -216,12 +207,11 @@ open class ByteCat {
             catCallback = null
             catBook.unregisterCallback(contactCallback)
 
-            refreshTimer?.cancel()
-            refreshTimer = null
-
             broadcastReceiver.close()
             messageReceiver.close()
             udpSender.close()
+
+            handler.shutdown()
         }
     }
 

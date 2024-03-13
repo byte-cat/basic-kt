@@ -20,4 +20,10 @@ class SimpleHandler : IHandler {
     override fun cancel(task: Runnable) {
         executor.remove(task)
     }
+
+    override fun shutdown() {
+        executor.shutdown()
+    }
+
+
 }
