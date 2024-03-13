@@ -1,7 +1,7 @@
 package com.github.bytecat.protocol
 
-import com.alibaba.fastjson2.JSONObject
 import com.github.bytecat.protocol.data.Data
+import org.json.JSONObject
 import java.util.UUID
 
 class Event(
@@ -21,13 +21,13 @@ class Event(
 
     constructor(name: String, data: Data): this(name, dataJson = data.toJSONObject())
 
-    constructor(jsonStr: String): this(JSONObject.parseObject(jsonStr))
+    constructor(jsonStr: String): this(JSONObject(jsonStr))
 
     constructor(json: JSONObject): this(
         json.getString(KEY_EVENT),
         json.getString(KEY_EVENT_ID),
         json.getLong(KEY_TIMESTAMP),
-        if (json.containsKey(KEY_DATA)) {
+        if (json.get(KEY_DATA) != null) {
             json.getJSONObject(KEY_DATA)
         } else {
             null

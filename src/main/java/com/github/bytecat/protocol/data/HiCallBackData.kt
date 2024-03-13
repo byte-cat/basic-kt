@@ -1,6 +1,6 @@
 package com.github.bytecat.protocol.data
 
-import com.alibaba.fastjson2.JSONObject
+import org.json.JSONObject
 
 class HiCallBackData(val callMeBack: Boolean = true) : Data {
 
@@ -8,7 +8,7 @@ class HiCallBackData(val callMeBack: Boolean = true) : Data {
         private const val KEY_CALL_ME_BACK = "callMeBack"
 
         fun parse(json: JSONObject): HiCallBackData {
-            return HiCallBackData(json.getBooleanValue(KEY_CALL_ME_BACK, false))
+            return HiCallBackData(json.optBoolean(KEY_CALL_ME_BACK, false))
         }
     }
 

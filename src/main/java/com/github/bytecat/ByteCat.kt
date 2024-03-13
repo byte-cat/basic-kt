@@ -1,6 +1,5 @@
 package com.github.bytecat
 
-import com.alibaba.fastjson2.JSONObject
 import com.github.bytecat.contact.Cat
 import com.github.bytecat.contact.CatBook
 import com.github.bytecat.handler.IHandler
@@ -8,15 +7,14 @@ import com.github.bytecat.handler.SimpleHandler
 import com.github.bytecat.message.MessageBox
 import com.github.bytecat.platform.ISystemInfo
 import com.github.bytecat.protocol.*
-import com.github.bytecat.protocol.data.CallBackData
-import com.github.bytecat.protocol.data.HiData
-import com.github.bytecat.protocol.data.HiCallBackData
-import com.github.bytecat.protocol.data.TextData
+import com.github.bytecat.protocol.data.*
 import com.github.bytecat.udp.UDPReceiver
+import com.github.bytecat.utils.FileRequestObserver
 import com.github.bytecat.utils.IDebugger
 import com.github.bytecat.utils.getLocalIP
-import java.util.Timer
-import java.util.TimerTask
+import com.github.bytecat.worker.Worker
+import org.json.JSONObject
+import java.io.File
 
 open class ByteCat {
 
@@ -27,7 +25,7 @@ open class ByteCat {
         private val MESSAGE_PREPARE_PORTS = arrayOf(3211, 3185, 4312, 9855, 1413)
     }
 
-    private val myLocalIP = getLocalIP()
+    private val myLocalIp = getLocalIP()
 
     open val debugger: IDebugger? = null
 
@@ -46,7 +44,7 @@ open class ByteCat {
 
         override fun onReceive(fromIp: String, data: ByteArray) {
             debugger?.onBroadcastReceived(fromIp, data)
-            if (fromIp == myLocalIP) {
+            if (fromIp == myLocalIp) {
                 return
             }
             dispatchReceive(data) { event ->
@@ -102,7 +100,13 @@ open class ByteCat {
                     EVENT_MESSAGE -> {
                         val msg = TextData.parse(event.dataJson!!)
                         catBook.findCatByIp(fromIp)?.run {
-                            MessageBox.obtain(this).onMessageReceived(msg)
+                            MessageBox.obtain(this).onTextReceived(msg)
+                        }
+                    }
+                    EVENT_FILE_REQUEST -> {
+                        val fileReqData = FileRequestData.from(event.dataJson!!)
+                        catBook.findCatByIp(fromIp)?.run {
+                            MessageBox.obtain(this).onFileRequestReceived(fileReqData)
                         }
                     }
                 }
@@ -149,6 +153,8 @@ open class ByteCat {
 
     private var catCallback: Callback? = null
 
+    private val worker = Worker()
+
     fun startup() {
         for (port in BROADCAST_PREPARE_PORTS) {
             val receiver = UDPReceiver(port)
@@ -189,8 +195,40 @@ open class ByteCat {
     }
 
     fun sendMessage(cat: Cat, text: String) {
-        handler.post{
+        handler.post {
             udpSender.sendMessage(cat.ip, cat.messagePort, text)
+        }
+    }
+
+    fun sendFileRequest(cat: Cat, file: File, observer: FileRequestObserver? = null) {
+        observer?.run {
+            handler.post {
+                onParseStart()
+            }
+        }
+
+        worker.queueWork({ Protocol.fileRequest(file) }) {
+            observer?.run {
+                handler.post {
+                    onParseEnd()
+                }
+            }
+            handler.post {
+                udpSender.send(cat.ip, cat.messagePort, it)
+            }
+        }
+    }
+
+    fun rejectFileRequest(cat: Cat, fileReq: FileRequestData) {
+        handler.post {
+            udpSender.send(cat.ip, messageReceiver.port, Protocol.fileResponseReject(fileReq).toJSONObject())
+        }
+    }
+
+    fun acceptFileRequest(cat: Cat, fileReq: FileRequestData) {
+        handler.post {
+            // TODO
+             println("acceptFileRequest --->")
         }
     }
 
@@ -227,7 +265,7 @@ open class ByteCat {
             return
         }
         handler.post {
-            catCallback?.onReady(Cat(myLocalIP, systemInfo.systemUserName, systemInfo.system,
+            catCallback?.onReady(Cat(myLocalIp, systemInfo.systemUserName, systemInfo.system,
                 broadcastReceiver.port, messageReceiver.port))
             catBook.registerCallback(contactCallback)
             for (port in BROADCAST_PREPARE_PORTS) {
@@ -243,7 +281,7 @@ open class ByteCat {
 
     private fun dispatchReceive(data: ByteArray, handler: (event: Event) -> Unit) {
         val text = String(data)
-        val jsonObj = JSONObject.parseObject(text)
+        val jsonObj = JSONObject(text)
         handler.invoke(Event(jsonObj))
     }
 
