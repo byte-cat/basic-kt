@@ -3,6 +3,7 @@ package com.github.bytecat.protocol
 import com.github.bytecat.platform.ISystemInfo
 import com.github.bytecat.protocol.data.*
 import java.io.File
+import java.io.InputStream
 
 const val EVENT_HI2A = "hi2a"
 const val EVENT_HI2U = "hi2u"
@@ -41,6 +42,10 @@ object Protocol {
 
     fun fileRequest(file: File): Event {
         return Event(EVENT_FILE_REQUEST, FileRequestData.from(file))
+    }
+
+    fun fileRequest(fileName: String, inStream: InputStream): Event {
+        return Event(EVENT_FILE_REQUEST, FileRequestData.from(fileName, inStream))
     }
 
     fun fileResponseReject(fileReq: FileRequestData): Event {

@@ -15,6 +15,7 @@ import com.github.bytecat.utils.getLocalIP
 import com.github.bytecat.worker.Worker
 import org.json.JSONObject
 import java.io.File
+import java.io.InputStream
 
 open class ByteCat {
 
@@ -208,6 +209,25 @@ open class ByteCat {
         }
 
         worker.queueWork({ Protocol.fileRequest(file) }) {
+            observer?.run {
+                handler.post {
+                    onParseEnd()
+                }
+            }
+            handler.post {
+                udpSender.send(cat.ip, cat.messagePort, it)
+            }
+        }
+    }
+
+    fun sendFileRequest(cat: Cat, fileName: String, inStream: InputStream, observer: FileRequestObserver? = null) {
+        observer?.run {
+            handler.post {
+                onParseStart()
+            }
+        }
+
+        worker.queueWork({ Protocol.fileRequest(fileName, inStream) }) {
             observer?.run {
                 handler.post {
                     onParseEnd()
