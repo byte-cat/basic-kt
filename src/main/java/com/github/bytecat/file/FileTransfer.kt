@@ -65,13 +65,13 @@ class FileTransfer(
             }
         }
 
-        callback?.onEnd(outputFile, hashText)
+        callback?.onEnd(outputFile, hashText, acceptCode)
     }
 
     interface Callback {
         fun onStart(totalSize: Long)
         fun onTransfer(receivedSize: Long, totalSize: Long)
-        fun onEnd(file: File, md5: String)
+        fun onEnd(file: File, md5: String, acceptCode: String)
     }
 
 }

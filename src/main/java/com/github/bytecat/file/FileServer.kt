@@ -62,8 +62,8 @@ class FileServer private constructor(private val worker: Worker, private var out
                         println("receivedSize=$receivedSize totalSize=${totalSize} percent=${receivedSize.toDouble() / totalSize * 100}")
                     }
 
-                    override fun onEnd(file: File, md5: String) {
-                        println("md5=${md5}")
+                    override fun onEnd(file: File, md5: String, acceptCode: String) {
+                        removeFileInfo(acceptCode)
                     }
                 }
                 worker.queueWork(transfer)

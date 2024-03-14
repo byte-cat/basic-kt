@@ -232,6 +232,9 @@ open class ByteCat {
         handler.post {
             val acceptRes = fileReq.accept(fileServer.port)
 
+            // record file that will receive
+            fileServer.addFileInfo(acceptRes.acceptCode, fileReq.name, fileReq.size, fileReq.md5)
+
             fileServer.waitFile()
             udpSender.send(cat.ip, cat.messagePort, Protocol.fileResponse(acceptRes))
         }
