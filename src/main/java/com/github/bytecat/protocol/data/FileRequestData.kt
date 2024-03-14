@@ -6,12 +6,7 @@ import org.json.JSONObject
 import java.io.InputStream
 import java.util.UUID
 
-class FileRequestData private constructor(
-    val requestId: String = UUID.randomUUID().toString(),
-    val name: String,
-    val size: Long,
-    val md5: String
-) : Data {
+open class FileRequestData protected constructor(requestId: String = UUID.randomUUID().toString(), name: String, size: Long, md5: String) : Data {
 
     companion object {
         private const val KEY_REQUEST_ID = "requestId"
@@ -39,6 +34,16 @@ class FileRequestData private constructor(
         }
 
     }
+
+    var requestId: String = requestId
+        private set
+    var name: String = name
+        private set
+    var size: Long = size
+        private set
+    var md5: String = md5
+        private set
+
 
     fun accept(streamPort: Int): FileResponseData {
         return FileResponseData.accept(this, streamPort)

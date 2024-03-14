@@ -3,11 +3,11 @@ package com.github.bytecat.protocol.data
 import org.json.JSONObject
 import java.util.UUID
 
-class FileResponseData private constructor(
-    val responseId: String,
-    val responseCode: Int,
-    val streamPort: Int,
-    val acceptCode: String = if (responseCode == RESPONSE_CODE_ACCEPT) {
+open class FileResponseData protected constructor(
+    responseId: String,
+    responseCode: Int,
+    streamPort: Int,
+    acceptCode: String = if (responseCode == RESPONSE_CODE_ACCEPT) {
         UUID.randomUUID().toString()
     } else {
         ""
@@ -42,6 +42,16 @@ class FileResponseData private constructor(
         }
 
     }
+
+    var responseId: String = responseId
+        protected set
+    var responseCode: Int = responseCode
+        protected set
+    var streamPort: Int = streamPort
+        protected set
+    var acceptCode: String = acceptCode
+        protected set
+
 
     override fun toJSONObject(): JSONObject {
         return JSONObject().apply {
