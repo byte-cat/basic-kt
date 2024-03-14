@@ -2,14 +2,12 @@ package com.github.bytecat.protocol
 
 import com.github.bytecat.platform.ISystemInfo
 import com.github.bytecat.protocol.data.*
-import java.io.File
-import java.io.InputStream
 
 const val EVENT_HI2A = "hi2a"
 const val EVENT_HI2U = "hi2u"
 const val EVENT_BYE2A = "bye2a"
 const val EVENT_CALL_BACK = "callBack"
-const val EVENT_MESSAGE = "msg"
+const val EVENT_TEXT = "text"
 const val EVENT_FILE_REQUEST = "fileReq"
 const val EVENT_FILE_RESPONSE = "fileRes"
 
@@ -36,8 +34,8 @@ object Protocol {
         return Event(EVENT_CALL_BACK, CallBackData(callBackId))
     }
 
-    fun message(text: String): Event {
-        return Event(EVENT_MESSAGE, TextData(text))
+    fun text(text: String): Event {
+        return Event(EVENT_TEXT, TextData(text))
     }
 
     fun fileRequest(fileReq: FileRequestData): Event {

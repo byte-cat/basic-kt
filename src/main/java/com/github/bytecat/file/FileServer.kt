@@ -4,15 +4,15 @@ import com.github.bytecat.worker.Worker
 import java.io.File
 import java.net.ServerSocket
 
-class FileServer private constructor(private val worker: Worker) {
+class FileServer private constructor(private val worker: Worker, private var outputDir: File) {
 
     companion object {
 
         private val START_PORT = 10000
         private val END_PORT = 11000
 
-        fun obtain(worker: Worker): FileServer {
-            val fileServer = FileServer(worker)
+        fun obtain(worker: Worker, outputDir: File): FileServer {
+            val fileServer = FileServer(worker, outputDir)
             var port = START_PORT
             while (!fileServer.start(port) && port <= END_PORT) {
                 port++
@@ -44,7 +44,7 @@ class FileServer private constructor(private val worker: Worker) {
         return true
     }
 
-    fun waitFile(onNew: () -> File) {
+    fun waitFile() {
         if (isWaiting) {
             return
         }
@@ -52,7 +52,7 @@ class FileServer private constructor(private val worker: Worker) {
             isWaiting = true
             while (started) {
                 val clientSocket = serverSocket.accept()
-                val transfer = FileTransfer(this, clientSocket)
+                val transfer = FileTransfer(this, clientSocket, outputDir)
                 transfer.callback = object : FileTransfer.Callback {
                     override fun onStart(totalSize: Long) {
                         println("totalSize=${totalSize}")
@@ -62,11 +62,10 @@ class FileServer private constructor(private val worker: Worker) {
                         println("receivedSize=$receivedSize totalSize=${totalSize} percent=${receivedSize.toDouble() / totalSize * 100}")
                     }
 
-                    override fun onEnd(md5: String) {
+                    override fun onEnd(file: File, md5: String) {
                         println("md5=${md5}")
                     }
                 }
-                transfer.saveTo = onNew.invoke()
                 worker.queueWork(transfer)
             }
             isWaiting = false

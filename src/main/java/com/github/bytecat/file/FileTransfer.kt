@@ -7,9 +7,11 @@ import java.math.BigInteger
 import java.net.Socket
 import java.security.MessageDigest
 
-class FileTransfer(val server: FileServer, private val clientSocket: Socket) : Runnable {
-
-    var saveTo: File? = null
+class FileTransfer(
+    private val server: FileServer,
+    private val clientSocket: Socket,
+    private val outputDir: File
+) : Runnable {
 
     var callback: Callback? = null
 
@@ -33,7 +35,9 @@ class FileTransfer(val server: FileServer, private val clientSocket: Socket) : R
         val byteBuffer = ByteArray(8092)
         var readSize: Int
 
-        val outStream = FileOutputStream(saveTo)
+        val outputFile = File(outputDir, registeredFileInfo!!.name)
+        val outputFileTmp = File("${outputFile.absolutePath}.tmp")
+        val outStream = FileOutputStream(outputFileTmp)
 
         while (inStream.read(byteBuffer).also { readSize = it } != -1) {
             outStream.write(byteBuffer, 0, readSize)
@@ -45,6 +49,8 @@ class FileTransfer(val server: FileServer, private val clientSocket: Socket) : R
         inStream.close()
         outStream.flush()
         outStream.close()
+
+        outputFileTmp.renameTo(outputFile)
 
         val bigInt = BigInteger(1, md5Digest.digest())
         val hashText = bigInt.toString(16).run {
@@ -59,13 +65,13 @@ class FileTransfer(val server: FileServer, private val clientSocket: Socket) : R
             }
         }
 
-        callback?.onEnd(hashText)
+        callback?.onEnd(outputFile, hashText)
     }
 
     interface Callback {
         fun onStart(totalSize: Long)
         fun onTransfer(receivedSize: Long, totalSize: Long)
-        fun onEnd(md5: String)
+        fun onEnd(file: File, md5: String)
     }
 
 }

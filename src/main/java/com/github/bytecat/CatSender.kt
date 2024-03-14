@@ -14,8 +14,8 @@ class CatSender : UDPSender() {
         send(ip, port, event.toJSONObject())
     }
 
-    fun sendMessage(ip: String, port: Int, text: String) {
-        send(ip, port, Protocol.message(text))
+    fun sendText(ip: String, port: Int, text: String) {
+        send(ip, port, Protocol.text(text))
     }
 
 }

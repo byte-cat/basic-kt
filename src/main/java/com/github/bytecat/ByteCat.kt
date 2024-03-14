@@ -13,11 +13,12 @@ import com.github.bytecat.file.FileServer
 import com.github.bytecat.file.IFile
 import com.github.bytecat.file.PendingSendRegistry
 import com.github.bytecat.udp.UDPReceiver
+import com.github.bytecat.udp.handler.BroadcastHandler
+import com.github.bytecat.udp.handler.MessageHandler
 import com.github.bytecat.utils.FileRequestObserver
 import com.github.bytecat.utils.IDebugger
 import com.github.bytecat.utils.getLocalIP
 import com.github.bytecat.worker.Worker
-import org.json.JSONObject
 import java.io.File
 
 open class ByteCat {
@@ -29,7 +30,7 @@ open class ByteCat {
         private val MESSAGE_PREPARE_PORTS = arrayOf(3211, 3185, 4312, 9855, 1413)
     }
 
-    private val myLocalIp = getLocalIP()
+    val myLocalIp = getLocalIP()
 
     open val debugger: IDebugger? = null
 
@@ -40,95 +41,88 @@ open class ByteCat {
         }
     }
 
-    private val broadcastListener = object : UDPReceiver.OnReceiveListener {
-        override fun onReady() {
-            debugger?.onBroadcastReady()
-            trySayHiToAll()
-        }
+    open val handler: IHandler by lazy { SimpleHandler() }
 
-        override fun onReceive(fromIp: String, data: ByteArray) {
-            debugger?.onBroadcastReceived(fromIp, data)
-            if (fromIp == myLocalIp) {
-                return
-            }
-            dispatchReceive(data) { event ->
-                when(event.name) {
-                    EVENT_HI2A -> {
-                        val hiData = HiData.parse(event.dataJson!!)
-
-                        catBook.addCat(hiData.systemUserName, hiData.osName, fromIp, hiData.broadcastPort, hiData.messagePort)
-
-                        udpSender.send(fromIp, hiData.messagePort, Protocol.hiToYou(
-                            broadcastReceiver.port,
-                            messageReceiver.port,
-                            systemInfo
-                        ))
-                    }
-                    EVENT_BYE2A -> {
-                        catBook.removeCat(fromIp)
-                    }
-                }
-            }
+    open var outputDir = File("./download/").also {
+        if (!it.exists()) {
+            it.mkdirs()
         }
     }
 
-    private val messageListener = object : UDPReceiver.OnReceiveListener {
+    val catBook = CatBook()
+
+    private val broadcastHandler by lazy {
+        object : BroadcastHandler(this) {
+            override fun onHiToAll(fromIp: String, event: Event, hiData: HiData) {
+                catBook.addCat(hiData.systemUserName, hiData.osName, fromIp, hiData.broadcastPort, hiData.messagePort)
+
+                udpSender.send(fromIp, hiData.messagePort, Protocol.hiToYou(
+                    broadcastReceiver.port,
+                    messageReceiver.port,
+                    systemInfo
+                ))
+            }
+
+            override fun onByeToAll(fromIp: String) {
+                catBook.removeCat(fromIp)
+            }
+
+            override fun onReady() {
+                debugger?.onBroadcastReady()
+                trySayHiToAll()
+            }
+
+        }
+    }
+
+    private val messageHandler = object : MessageHandler(){
         override fun onReady() {
             debugger?.onMessageReady()
             trySayHiToAll()
         }
 
-        override fun onReceive(fromIp: String, data: ByteArray) {
-            debugger?.onMessageReceived(fromIp, data)
-            dispatchReceive(data) { event ->
-                when(event.name) {
-                    EVENT_HI2U -> {
-                        val callBack = HiCallBackData.parse(event.dataJson!!)
-                        if (callBack.callMeBack) {
-                            val cat = catBook.findCatByIp(fromIp)
-                            if (cat != null) {
-                                udpSender.send(fromIp, cat.messagePort, Protocol.callBack(event.id))
-                            }
-                        } else {
-                            val hiData = HiData.parse(event.dataJson)
-                            catBook.addCat(hiData.systemUserName, hiData.osName, fromIp, hiData.broadcastPort, hiData.messagePort)
-                        }
+        override fun onHiToYou(fromIp: String, event: Event, hiData: HiData) {
+            catBook.addCat(hiData.systemUserName, hiData.osName, fromIp, hiData.broadcastPort, hiData.messagePort)
+        }
+
+        override fun onHiToYouAndCallMeBack(fromIp: String, event: Event) {
+            val cat = catBook.findCatByIp(fromIp)
+            if (cat != null) {
+                udpSender.send(fromIp, cat.messagePort, Protocol.callBack(event.id))
+            }
+        }
+
+        override fun onCallBack(fromIp: String, event: Event, callBackData: CallBackData) {
+            refreshingCats.remove(callBackData.id)
+            if (refreshingCats.isEmpty()) {
+                handler.cancel(refreshTask);
+            }
+        }
+
+        override fun onText(fromIp: String, text: TextData) {
+            catBook.findCatByIp(fromIp)?.run {
+                MessageBox.obtain(this).onTextReceived(text)
+            }
+        }
+
+        override fun onFileRequest(fromIp: String, fileReqData: FileRequestData) {
+            catBook.findCatByIp(fromIp)?.run {
+                MessageBox.obtain(this).onFileRequestReceived(fileReqData)
+            }
+        }
+
+        override fun onFileResponse(fromIp: String, fileResData: FileResponseData) {
+            val pendingSend = pendingSendRegistry.response(fileResData)!!
+            when (fileResData.responseCode) {
+                FileResponseData.RESPONSE_CODE_ACCEPT -> {
+                    FileClient(worker).run {
+                        start(fromIp, fileResData.streamPort)
+                        sendFile(pendingSend.file, fileResData.acceptCode)
                     }
-                    EVENT_CALL_BACK -> {
-                        val callBackData = CallBackData.parse(event.dataJson!!)
-                        refreshingCats.remove(callBackData.id)
-                        if (refreshingCats.isEmpty()) {
-                            handler.cancel(refreshTask);
-                        }
-                    }
-                    EVENT_MESSAGE -> {
-                        val msg = TextData.parse(event.dataJson!!)
-                        catBook.findCatByIp(fromIp)?.run {
-                            MessageBox.obtain(this).onTextReceived(msg)
-                        }
-                    }
-                    EVENT_FILE_REQUEST -> {
-                        val fileReqData = FileRequestData.from(event.dataJson!!)
-                        catBook.findCatByIp(fromIp)?.run {
-                            MessageBox.obtain(this).onFileRequestReceived(fileReqData)
-                        }
-                    }
-                    EVENT_FILE_RESPONSE -> {
-                        val fileResData = FileResponseData.from(event.dataJson!!)
-                        val pendingSend = pendingSendRegistry.response(fileResData) ?: return@dispatchReceive
-                        when (fileResData.responseCode) {
-                            FileResponseData.RESPONSE_CODE_ACCEPT -> {
-                                FileClient(worker).run {
-                                    start(fromIp, fileResData.streamPort)
-                                    sendFile(pendingSend.file, fileResData.acceptCode)
-                                }
-                                pendingSend.file
-                            }
-                            FileResponseData.RESPONSE_CODE_REJECT -> {
-                                // Need do nothing
-                            }
-                        }
-                    }
+                    pendingSend.file
+                }
+                FileResponseData.RESPONSE_CODE_REJECT -> {
+                    // Need do nothing
                 }
             }
         }
@@ -137,29 +131,10 @@ open class ByteCat {
     private lateinit var broadcastReceiver: UDPReceiver
     private lateinit var messageReceiver: UDPReceiver
 
-    open val handler: IHandler by lazy { SimpleHandler() }
-
     private val udpSender by lazy { CatSender() }
 
     @Volatile
     private var isReady = false
-
-    private val contactCallback = object : CatBook.Callback {
-
-        override fun onContactAdd(cat: Cat) {
-            debugger?.onContactAdd(cat)
-        }
-
-        override fun onContactUpdate(cat: Cat) {
-
-        }
-
-        override fun onContactRemove(cat: Cat) {
-            debugger?.onContactRemove(cat)
-        }
-    }
-
-    val catBook = CatBook()
 
     private val refreshTask = Runnable {
         if (refreshingCats.isNotEmpty()) {
@@ -175,20 +150,14 @@ open class ByteCat {
 
     private val worker = Worker()
 
-    private val fileServer by lazy { FileServer.obtain(worker) }
+    private val fileServer by lazy { FileServer.obtain(worker, outputDir) }
 
     private val pendingSendRegistry by lazy { PendingSendRegistry() }
-
-    open var outputDir = File("./download/").also {
-        if (!it.exists()) {
-            it.mkdirs()
-        }
-    }
 
     fun startup() {
         for (port in BROADCAST_PREPARE_PORTS) {
             val receiver = UDPReceiver(port)
-            if (receiver.listen(broadcastListener)) {
+            if (receiver.listen(broadcastHandler)) {
                 if (!::broadcastReceiver.isInitialized) {
                     broadcastReceiver = receiver
                     break
@@ -197,7 +166,7 @@ open class ByteCat {
         }
         for (port in MESSAGE_PREPARE_PORTS) {
             val receiver = UDPReceiver(port)
-            if (receiver.listen(messageListener)) {
+            if (receiver.listen(messageHandler)) {
                 if (!::messageReceiver.isInitialized) {
                     messageReceiver = receiver
                     break
@@ -224,9 +193,9 @@ open class ByteCat {
         }
     }
 
-    fun sendMessage(cat: Cat, text: String) {
+    fun sendText(cat: Cat, text: String) {
         handler.post {
-            udpSender.sendMessage(cat.ip, cat.messagePort, text)
+            udpSender.sendText(cat.ip, cat.messagePort, text)
         }
     }
 
@@ -263,9 +232,7 @@ open class ByteCat {
         handler.post {
             val acceptRes = fileReq.accept(fileServer.port)
 
-            fileServer.waitFile {
-                File(outputDir, fileReq.name)
-            }
+            fileServer.waitFile()
             udpSender.send(cat.ip, cat.messagePort, Protocol.fileResponse(acceptRes))
         }
     }
@@ -281,7 +248,6 @@ open class ByteCat {
             }
 
             catCallback = null
-            catBook.unregisterCallback(contactCallback)
 
             broadcastReceiver.close()
             messageReceiver.close()
@@ -305,7 +271,6 @@ open class ByteCat {
         handler.post {
             catCallback?.onReady(Cat(myLocalIp, systemInfo.systemUserName, systemInfo.system,
                 broadcastReceiver.port, messageReceiver.port))
-            catBook.registerCallback(contactCallback)
             for (port in BROADCAST_PREPARE_PORTS) {
                 udpSender.send(
                     BROADCAST_IP, port,
@@ -315,12 +280,6 @@ open class ByteCat {
         }
 
         isReady = true
-    }
-
-    private fun dispatchReceive(data: ByteArray, handler: (event: Event) -> Unit) {
-        val text = String(data)
-        val jsonObj = JSONObject(text)
-        handler.invoke(Event(jsonObj))
     }
 
     interface Callback {
