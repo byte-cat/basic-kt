@@ -2,20 +2,22 @@ package com.github.bytecat
 
 import com.github.bytecat.contact.Cat
 import com.github.bytecat.contact.CatBook
+import com.github.bytecat.file.FileClient
 import com.github.bytecat.handler.IHandler
 import com.github.bytecat.handler.SimpleHandler
 import com.github.bytecat.message.MessageBox
 import com.github.bytecat.platform.ISystemInfo
 import com.github.bytecat.protocol.*
 import com.github.bytecat.protocol.data.*
+import com.github.bytecat.file.FileServer
+import com.github.bytecat.file.IFile
+import com.github.bytecat.file.PendingSendRegistry
 import com.github.bytecat.udp.UDPReceiver
 import com.github.bytecat.utils.FileRequestObserver
 import com.github.bytecat.utils.IDebugger
 import com.github.bytecat.utils.getLocalIP
 import com.github.bytecat.worker.Worker
 import org.json.JSONObject
-import java.io.File
-import java.io.InputStream
 
 open class ByteCat {
 
@@ -110,6 +112,22 @@ open class ByteCat {
                             MessageBox.obtain(this).onFileRequestReceived(fileReqData)
                         }
                     }
+                    EVENT_FILE_RESPONSE -> {
+                        val fileResData = FileResponseData.from(event.dataJson!!)
+                        val pendingSend = pendingSendRegistry.response(fileResData) ?: return@dispatchReceive
+                        when (fileResData.responseCode) {
+                            FileResponseData.RESPONSE_CODE_ACCEPT -> {
+                                FileClient(worker).run {
+                                    start(fromIp, fileResData.streamPort)
+                                    sendFile(pendingSend.file, fileResData.acceptCode)
+                                }
+                                pendingSend.file
+                            }
+                            FileResponseData.RESPONSE_CODE_REJECT -> {
+                                // Need do nothing
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -156,6 +174,10 @@ open class ByteCat {
 
     private val worker = Worker()
 
+    private val fileServer by lazy { FileServer.obtain(worker) }
+
+    private val pendingSendRegistry by lazy { PendingSendRegistry() }
+
     fun startup() {
         for (port in BROADCAST_PREPARE_PORTS) {
             val receiver = UDPReceiver(port)
@@ -201,33 +223,18 @@ open class ByteCat {
         }
     }
 
-    fun sendFileRequest(cat: Cat, file: File, observer: FileRequestObserver? = null) {
+    fun sendFileRequest(cat: Cat, file: IFile, observer: FileRequestObserver? = null) {
         observer?.run {
             handler.post {
                 onParseStart()
             }
         }
 
-        worker.queueWork({ Protocol.fileRequest(file) }) {
-            observer?.run {
-                handler.post {
-                    onParseEnd()
-                }
-            }
-            handler.post {
-                udpSender.send(cat.ip, cat.messagePort, it)
-            }
-        }
-    }
-
-    fun sendFileRequest(cat: Cat, fileName: String, inStream: InputStream, observer: FileRequestObserver? = null) {
-        observer?.run {
-            handler.post {
-                onParseStart()
-            }
-        }
-
-        worker.queueWork({ Protocol.fileRequest(fileName, inStream) }) {
+        worker.queueWork({
+            val fileReq = FileRequestData.from(file)
+            pendingSendRegistry.request(fileReq, file)
+            Protocol.fileRequest(fileReq)
+        }) {
             observer?.run {
                 handler.post {
                     onParseEnd()
@@ -241,14 +248,16 @@ open class ByteCat {
 
     fun rejectFileRequest(cat: Cat, fileReq: FileRequestData) {
         handler.post {
-            udpSender.send(cat.ip, cat.messagePort, Protocol.fileResponseReject(fileReq).toJSONObject())
+            udpSender.send(cat.ip, cat.messagePort, Protocol.fileResponse(fileReq.reject()))
         }
     }
 
     fun acceptFileRequest(cat: Cat, fileReq: FileRequestData) {
         handler.post {
-            // TODO
-             println("acceptFileRequest --->")
+            val acceptRes = fileReq.accept(fileServer.port)
+            acceptRes.acceptCode
+            acceptRes.responseId
+            udpSender.send(cat.ip, cat.messagePort, Protocol.fileResponse(acceptRes))
         }
     }
 

@@ -40,19 +40,12 @@ object Protocol {
         return Event(EVENT_MESSAGE, TextData(text))
     }
 
-    fun fileRequest(file: File): Event {
-        return Event(EVENT_FILE_REQUEST, FileRequestData.from(file))
+    fun fileRequest(fileReq: FileRequestData): Event {
+        return Event(EVENT_FILE_REQUEST, fileReq)
     }
 
-    fun fileRequest(fileName: String, inStream: InputStream): Event {
-        return Event(EVENT_FILE_REQUEST, FileRequestData.from(fileName, inStream))
-    }
-
-    fun fileResponseReject(fileReq: FileRequestData): Event {
-        return Event(EVENT_FILE_RESPONSE, FileResponseData.reject(fileReq))
-    }
-    fun fileResponseAccept(fileReq: FileRequestData, streamPort: Int): Event {
-        return Event(EVENT_FILE_RESPONSE, FileResponseData.accept(fileReq, streamPort))
+    fun fileResponse(fileRes: FileResponseData): Event {
+        return Event(EVENT_FILE_RESPONSE, fileRes)
     }
 
 }

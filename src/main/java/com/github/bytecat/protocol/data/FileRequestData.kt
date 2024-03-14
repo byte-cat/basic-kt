@@ -1,8 +1,8 @@
 package com.github.bytecat.protocol.data
 
 import com.github.bytecat.ext.getMD5
+import com.github.bytecat.file.IFile
 import org.json.JSONObject
-import java.io.File
 import java.io.InputStream
 import java.util.UUID
 
@@ -28,8 +28,8 @@ class FileRequestData private constructor (
             )
         }
 
-        fun from(file: File): FileRequestData {
-            return FileRequestData(name = file.name, size = file.length(), md5 = file.getMD5())
+        fun from(file: IFile): FileRequestData {
+            return FileRequestData(name = file.getName(), size = file.length(), md5 = file.getMD5())
         }
 
         fun from(fileName: String, inputStream: InputStream): FileRequestData {
@@ -38,6 +38,14 @@ class FileRequestData private constructor (
             return FileRequestData(name = fileName, size = size.toLong(), md5 = md5)
         }
 
+    }
+
+    fun accept(streamPort: Int): FileResponseData {
+        return FileResponseData.accept(this, streamPort)
+    }
+
+    fun reject(): FileResponseData {
+        return FileResponseData.reject(this)
     }
 
     override fun toJSONObject(): JSONObject {
