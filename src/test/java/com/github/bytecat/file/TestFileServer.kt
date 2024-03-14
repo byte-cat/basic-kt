@@ -11,7 +11,7 @@ class TestFileServer {
 
     @Test
     fun testWaitFile() {
-        val server = FileServer.obtain(worker)
+        val server = FileServer.obtain(worker, File("./build"))
         Thread {
             Thread.sleep(1000L)
             val client = FileClient(worker)
@@ -22,9 +22,7 @@ class TestFileServer {
             client.sendFile(file, "12345678")
         }.start()
 
-        server.waitFile {
-            File("./build/ljmf.heic")
-        }
+        server.waitFile()
 
         Thread.sleep(3000L)
     }
