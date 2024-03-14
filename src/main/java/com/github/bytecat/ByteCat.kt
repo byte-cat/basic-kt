@@ -268,9 +268,8 @@ open class ByteCat {
         if (!broadcastReceiver.isReady || !messageReceiver.isReady) {
             return
         }
-        handler.post {
-            catCallback?.onReady(Cat(myLocalIp, systemInfo.systemUserName, systemInfo.system,
-                broadcastReceiver.port, messageReceiver.port))
+
+        fun broadcastMyself() {
             for (port in BROADCAST_PREPARE_PORTS) {
                 udpSender.send(
                     BROADCAST_IP, port,
@@ -278,6 +277,15 @@ open class ByteCat {
                 )
             }
         }
+
+        handler.post {
+            catCallback?.onReady(Cat(myLocalIp, systemInfo.systemUserName, systemInfo.system,
+                broadcastReceiver.port, messageReceiver.port))
+            broadcastMyself()
+        }
+
+        handler.post(1000L) { broadcastMyself() }
+        handler.post(2000L) { broadcastMyself() }
 
         isReady = true
     }
