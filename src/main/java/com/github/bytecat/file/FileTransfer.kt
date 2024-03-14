@@ -20,7 +20,8 @@ class FileTransfer(
 
         // Read header info
         val acceptCodeLen = inStream.readInt()
-        val acceptCodeBytes = inStream.readNBytes(acceptCodeLen)
+        val acceptCodeBytes = ByteArray(acceptCodeLen)
+        inStream.read(acceptCodeBytes)
         val acceptCode = String(acceptCodeBytes)
 
         val registeredFileInfo = server.getFileInfo(acceptCode)
