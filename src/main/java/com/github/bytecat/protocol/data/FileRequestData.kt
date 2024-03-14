@@ -36,13 +36,13 @@ open class FileRequestData protected constructor(requestId: String = UUID.random
     }
 
     var requestId: String = requestId
-        private set
+        protected set
     var name: String = name
-        private set
+        protected set
     var size: Long = size
-        private set
+        protected set
     var md5: String = md5
-        private set
+        protected set
 
 
     fun accept(streamPort: Int): FileResponseData {
