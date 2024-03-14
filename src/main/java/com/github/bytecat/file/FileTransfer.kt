@@ -21,8 +21,6 @@ class FileTransfer(val server: FileServer, private val clientSocket: Socket) : R
         val acceptCodeBytes = inStream.readNBytes(acceptCodeLen)
         val acceptCode = String(acceptCodeBytes)
 
-        println("received acceptCode=$acceptCode")
-
         val registeredFileInfo = server.getFileInfo(acceptCode)
 
         val totalSize = inStream.readLong()

@@ -2,7 +2,7 @@ package com.github.bytecat.protocol.data
 
 import org.json.JSONObject
 
-class TextData(val text: String) : Data {
+open class TextData(val text: String) : Data {
 
     companion object {
         private const val KEY_TEXT = "text"
