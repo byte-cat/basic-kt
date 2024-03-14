@@ -18,6 +18,7 @@ import com.github.bytecat.utils.IDebugger
 import com.github.bytecat.utils.getLocalIP
 import com.github.bytecat.worker.Worker
 import org.json.JSONObject
+import java.io.File
 
 open class ByteCat {
 
@@ -178,6 +179,12 @@ open class ByteCat {
 
     private val pendingSendRegistry by lazy { PendingSendRegistry() }
 
+    open var outputDir = File("./download/").also {
+        if (!it.exists()) {
+            it.mkdirs()
+        }
+    }
+
     fun startup() {
         for (port in BROADCAST_PREPARE_PORTS) {
             val receiver = UDPReceiver(port)
@@ -255,8 +262,10 @@ open class ByteCat {
     fun acceptFileRequest(cat: Cat, fileReq: FileRequestData) {
         handler.post {
             val acceptRes = fileReq.accept(fileServer.port)
-            acceptRes.acceptCode
-            acceptRes.responseId
+
+            fileServer.waitFile {
+                File(outputDir, fileReq.name)
+            }
             udpSender.send(cat.ip, cat.messagePort, Protocol.fileResponse(acceptRes))
         }
     }

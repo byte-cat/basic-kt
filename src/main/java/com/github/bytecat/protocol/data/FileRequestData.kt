@@ -6,7 +6,7 @@ import org.json.JSONObject
 import java.io.InputStream
 import java.util.UUID
 
-open class FileRequestData (
+class FileRequestData private constructor(
     val requestId: String = UUID.randomUUID().toString(),
     val name: String,
     val size: Long,

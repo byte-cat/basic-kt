@@ -3,7 +3,7 @@ package com.github.bytecat.protocol.data
 import org.json.JSONObject
 import java.util.UUID
 
-open class FileResponseData(
+class FileResponseData private constructor(
     val responseId: String,
     val responseCode: Int,
     val streamPort: Int,

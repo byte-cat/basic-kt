@@ -26,6 +26,9 @@ class FileServer private constructor(private val worker: Worker) {
     @Volatile
     private var started = false
 
+    var isWaiting = false
+        private set
+
     val port get() = serverSocket.localPort
 
     private val fileInfoMap = HashMap<String, FileInfo>()
@@ -42,7 +45,11 @@ class FileServer private constructor(private val worker: Worker) {
     }
 
     fun waitFile(onNew: () -> File) {
+        if (isWaiting) {
+            return
+        }
         worker.queueWork {
+            isWaiting = true
             while (started) {
                 val clientSocket = serverSocket.accept()
                 val transfer = FileTransfer(this, clientSocket)
@@ -62,6 +69,7 @@ class FileServer private constructor(private val worker: Worker) {
                 transfer.saveTo = onNew.invoke()
                 worker.queueWork(transfer)
             }
+            isWaiting = false
         }
     }
 
