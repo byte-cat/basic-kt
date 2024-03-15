@@ -68,7 +68,7 @@ class FileReceiver(
         }
 
         myCat.fileReceiveManager.removeFileInfo(acceptCode)
-        callback?.onEnd(registeredFileInfo.receiveFrom, outputFile, hashText, acceptCode)
+        callback?.onSuccess(registeredFileInfo.receiveFrom, outputFile, hashText, acceptCode)
     }
 
 }

@@ -44,8 +44,9 @@ class FileClient(private val worker: Worker) {
             outStream.flush()
             outStream.close()
 
-            // TODO
-            // callback?.onEnd()
+            callback?.onSuccess(task.sendTo, task.fileReq.md5, acceptCode)
+
+            callback = null
         }
 
     }
