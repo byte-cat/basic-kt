@@ -118,7 +118,10 @@ open class ByteCat {
         }
 
         override fun onFileResponse(fromIp: String, fileResData: FileResponseData) {
-            fileSendManager.responsePendingSend(fileResData, worker)
+            catBook.findCatByIp(fromIp)?.run {
+                MessageBox.obtain(this).onFileResponseReceived(fileResData)
+                fileSendManager.responsePendingSend(fileResData, worker)
+            }
         }
     }
 

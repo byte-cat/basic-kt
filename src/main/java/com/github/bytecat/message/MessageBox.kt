@@ -2,6 +2,7 @@ package com.github.bytecat.message
 
 import com.github.bytecat.contact.Cat
 import com.github.bytecat.protocol.data.FileRequestData
+import com.github.bytecat.protocol.data.FileResponseData
 import com.github.bytecat.protocol.data.TextData
 import java.util.LinkedList
 
@@ -29,8 +30,16 @@ class MessageBox private constructor(private val cat: Cat) {
         }
     }
 
-    fun onFileRequestReceived(fileReqData: FileRequestData) {
-        val message = Message.fromReceive(fileReqData)
+    fun onFileRequestReceived(fileReq: FileRequestData) {
+        val message = Message.fromReceive(fileReq)
+        messages.add(message)
+        callbacks.forEach {
+            it.onMessageReceived(cat, message)
+        }
+    }
+
+    fun onFileResponseReceived(fileRes: FileResponseData) {
+        val message = Message.fromReceive(fileRes)
         messages.add(message)
         callbacks.forEach {
             it.onMessageReceived(cat, message)
