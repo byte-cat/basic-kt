@@ -16,27 +16,27 @@ class FileSendManager(private val myCat: ByteCat) {
 
     private val outerCallbacks = LinkedList<TransferCallback>()
     private val transferCallback = object : TransferCallback {
-        override fun onStart(owner: Cat, totalSize: Long) {
+        override fun onStart(owner: Cat, transferId: String, totalSize: Long) {
             outerCallbacks.forEach {
-                it.onStart(owner, totalSize)
+                it.onStart(owner, transferId, totalSize)
             }
         }
 
-        override fun onTransfer(owner: Cat, transferSize: Long, totalSize: Long) {
+        override fun onTransfer(owner: Cat, transferId: String, transferSize: Long, totalSize: Long) {
             outerCallbacks.forEach {
-                it.onTransfer(owner, transferSize, totalSize)
+                it.onTransfer(owner, transferId, transferSize, totalSize)
             }
         }
 
-        override fun onSuccess(owner: Cat, md5: String, acceptCode: String) {
+        override fun onSuccess(owner: Cat, transferId: String, md5: String) {
             outerCallbacks.forEach {
-                it.onSuccess(owner, md5, acceptCode)
+                it.onSuccess(owner, transferId, md5)
             }
         }
 
-        override fun onError() {
+        override fun onError(owner: Cat, transferId: String, e: Throwable) {
             outerCallbacks.forEach {
-                it.onError()
+                it.onError(owner, transferId, e)
             }
         }
     }

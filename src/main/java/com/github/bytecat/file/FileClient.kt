@@ -28,7 +28,7 @@ class FileClient(private val worker: Worker) {
             outStream.writeLong(file.length())
 
             val totalSize = file.length()
-            callback?.onStart(task.sendTo, totalSize)
+            callback?.onStart(task.sendTo, acceptCode, totalSize)
 
             val inStream = file.openReadStream()
             val byteBuffer = ByteArray(8092)
@@ -38,13 +38,13 @@ class FileClient(private val worker: Worker) {
                 outStream.write(byteBuffer, 0, readCount)
                 writeSize += readCount
 
-                callback?.onTransfer(task.sendTo, writeSize, totalSize)
+                callback?.onTransfer(task.sendTo, acceptCode, writeSize, totalSize)
             }
             inStream.close()
             outStream.flush()
             outStream.close()
 
-            callback?.onSuccess(task.sendTo, task.fileReq.md5, acceptCode)
+            callback?.onSuccess(task.sendTo, acceptCode, task.fileReq.md5)
 
             callback = null
         }

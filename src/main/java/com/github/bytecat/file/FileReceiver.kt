@@ -29,7 +29,7 @@ class FileReceiver(
 
         val totalSize = inStream.readLong()
 
-        callback?.onStart(registeredFileInfo.receiveFrom, totalSize)
+        callback?.onStart(registeredFileInfo.receiveFrom, acceptCode, totalSize)
 
         val md5Digest = MessageDigest.getInstance("MD5")
 
@@ -45,7 +45,7 @@ class FileReceiver(
             outStream.write(byteBuffer, 0, readSize)
             receivedSize += readSize
             md5Digest.update(byteBuffer, 0, readSize)
-            callback?.onTransfer(registeredFileInfo.receiveFrom, receivedSize, totalSize)
+            callback?.onTransfer(registeredFileInfo.receiveFrom, acceptCode, receivedSize, totalSize)
         }
 
         inStream.close()
@@ -68,7 +68,7 @@ class FileReceiver(
         }
 
         myCat.fileReceiveManager.removeFileInfo(acceptCode)
-        callback?.onSuccess(registeredFileInfo.receiveFrom, hashText, acceptCode)
+        callback?.onSuccess(registeredFileInfo.receiveFrom, acceptCode, hashText)
     }
 
 }
