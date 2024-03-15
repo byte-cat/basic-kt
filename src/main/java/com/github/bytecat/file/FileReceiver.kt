@@ -37,7 +37,7 @@ class FileReceiver(
         val byteBuffer = ByteArray(8092)
         var readSize: Int
 
-        val outputFile = File(outputDir, registeredFileInfo!!.name)
+        val outputFile = File(outputDir, registeredFileInfo.name)
         val outputFileTmp = File("${outputFile.absolutePath}.tmp")
         val outStream = FileOutputStream(outputFileTmp)
 
@@ -68,7 +68,7 @@ class FileReceiver(
         }
 
         myCat.fileReceiveManager.removeFileInfo(acceptCode)
-        callback?.onSuccess(registeredFileInfo.receiveFrom, outputFile, hashText, acceptCode)
+        callback?.onSuccess(registeredFileInfo.receiveFrom, hashText, acceptCode)
     }
 
 }
