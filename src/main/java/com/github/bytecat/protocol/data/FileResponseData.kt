@@ -52,6 +52,9 @@ open class FileResponseData protected constructor(
     var acceptCode: String = acceptCode
         protected set
 
+    val isAccepted get() = responseCode == RESPONSE_CODE_ACCEPT
+    val isRejected get() = responseCode == RESPONSE_CODE_REJECT
+
 
     override fun toJSONObject(): JSONObject {
         return JSONObject().apply {

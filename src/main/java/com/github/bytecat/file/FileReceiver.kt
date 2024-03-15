@@ -1,5 +1,6 @@
 package com.github.bytecat.file
 
+import com.github.bytecat.ByteCat
 import java.io.DataInputStream
 import java.io.File
 import java.io.FileOutputStream
@@ -7,13 +8,13 @@ import java.math.BigInteger
 import java.net.Socket
 import java.security.MessageDigest
 
-class FileTransfer(
-    private val server: FileServer,
+class FileReceiver(
+    private val myCat: ByteCat,
     private val clientSocket: Socket,
     private val outputDir: File
 ) : Runnable {
 
-    var callback: Callback? = null
+    var callback: TransferCallback? = null
 
     override fun run() {
         val inStream = DataInputStream(clientSocket.getInputStream())
@@ -24,11 +25,11 @@ class FileTransfer(
         inStream.read(acceptCodeBytes)
         val acceptCode = String(acceptCodeBytes)
 
-        val registeredFileInfo = server.getFileInfo(acceptCode)
+        val registeredFileInfo = myCat.fileReceiveManager.getFileInfo(acceptCode) ?: return
 
         val totalSize = inStream.readLong()
 
-        callback?.onStart(totalSize)
+        callback?.onStart(registeredFileInfo.receiveFrom, totalSize)
 
         val md5Digest = MessageDigest.getInstance("MD5")
 
@@ -44,7 +45,7 @@ class FileTransfer(
             outStream.write(byteBuffer, 0, readSize)
             receivedSize += readSize
             md5Digest.update(byteBuffer, 0, readSize)
-            callback?.onTransfer(receivedSize, totalSize)
+            callback?.onTransfer(registeredFileInfo.receiveFrom, receivedSize, totalSize)
         }
 
         inStream.close()
@@ -66,13 +67,8 @@ class FileTransfer(
             }
         }
 
-        callback?.onEnd(outputFile, hashText, acceptCode)
-    }
-
-    interface Callback {
-        fun onStart(totalSize: Long)
-        fun onTransfer(receivedSize: Long, totalSize: Long)
-        fun onEnd(file: File, md5: String, acceptCode: String)
+        myCat.fileReceiveManager.removeFileInfo(acceptCode)
+        callback?.onEnd(registeredFileInfo.receiveFrom, outputFile, hashText, acceptCode)
     }
 
 }

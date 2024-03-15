@@ -2,16 +2,13 @@ package com.github.bytecat
 
 import com.github.bytecat.contact.Cat
 import com.github.bytecat.contact.CatBook
-import com.github.bytecat.file.FileClient
+import com.github.bytecat.file.*
 import com.github.bytecat.handler.IHandler
 import com.github.bytecat.handler.SimpleHandler
 import com.github.bytecat.message.MessageBox
 import com.github.bytecat.platform.ISystemInfo
 import com.github.bytecat.protocol.*
 import com.github.bytecat.protocol.data.*
-import com.github.bytecat.file.FileServer
-import com.github.bytecat.file.IFile
-import com.github.bytecat.file.PendingSendRegistry
 import com.github.bytecat.udp.UDPReceiver
 import com.github.bytecat.udp.handler.BroadcastHandler
 import com.github.bytecat.udp.handler.MessageHandler
@@ -28,6 +25,7 @@ open class ByteCat {
 
         private val BROADCAST_PREPARE_PORTS = arrayOf(1123, 5813, 2134, 5589, 3141)
         private val MESSAGE_PREPARE_PORTS = arrayOf(3211, 3185, 4312, 9855, 1413)
+
     }
 
     val myLocalIp = getLocalIP()
@@ -50,6 +48,14 @@ open class ByteCat {
     }
 
     val catBook = CatBook()
+
+    val fileSendManager: FileSendManager by lazy {
+        FileSendManager(this)
+    }
+
+    val fileReceiveManager: FileReceiverManager by lazy {
+        FileReceiverManager(this)
+    }
 
     private val broadcastHandler by lazy {
         object : BroadcastHandler(this) {
@@ -112,19 +118,7 @@ open class ByteCat {
         }
 
         override fun onFileResponse(fromIp: String, fileResData: FileResponseData) {
-            val pendingSend = pendingSendRegistry.response(fileResData)!!
-            when (fileResData.responseCode) {
-                FileResponseData.RESPONSE_CODE_ACCEPT -> {
-                    FileClient(worker).run {
-                        start(fromIp, fileResData.streamPort)
-                        sendFile(pendingSend.file, fileResData.acceptCode)
-                    }
-                    pendingSend.file
-                }
-                FileResponseData.RESPONSE_CODE_REJECT -> {
-                    // Need do nothing
-                }
-            }
+            fileSendManager.responsePendingSend(fileResData, worker)
         }
     }
 
@@ -148,11 +142,9 @@ open class ByteCat {
 
     private var catCallback: Callback? = null
 
-    private val worker = Worker()
+    internal val worker = Worker()
 
-    private val fileServer by lazy { FileServer.obtain(worker, outputDir) }
-
-    private val pendingSendRegistry by lazy { PendingSendRegistry() }
+    private val fileServer by lazy { FileServer.obtain(this, outputDir) }
 
     fun startup() {
         for (port in BROADCAST_PREPARE_PORTS) {
@@ -208,7 +200,9 @@ open class ByteCat {
 
         worker.queueWork({
             val fileReq = FileRequestData.from(file)
-            pendingSendRegistry.request(fileReq, file)
+
+            fileSendManager.newPendingSend(cat, fileReq, file)
+
             Protocol.fileRequest(fileReq)
         }) {
             observer?.run {
@@ -230,10 +224,7 @@ open class ByteCat {
 
     fun acceptFileRequest(cat: Cat, fileReq: FileRequestData) {
         handler.post {
-            val acceptRes = fileReq.accept(fileServer.port)
-
-            // record file that will receive
-            fileServer.addFileInfo(acceptRes.acceptCode, fileReq.name, fileReq.size, fileReq.md5)
+            val acceptRes = fileReceiveManager.accept(fileReq, cat, fileServer.port)
 
             fileServer.waitFile()
             udpSender.send(cat.ip, cat.messagePort, Protocol.fileResponse(acceptRes))

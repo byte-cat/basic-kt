@@ -1,18 +1,18 @@
 package com.github.bytecat.file
 
-import com.github.bytecat.worker.Worker
+import com.github.bytecat.ByteCat
 import java.io.File
 import java.net.ServerSocket
 
-class FileServer private constructor(private val worker: Worker, private var outputDir: File) {
+class FileServer private constructor(private val myCat: ByteCat, private var outputDir: File) {
 
     companion object {
 
         private val START_PORT = 10000
         private val END_PORT = 11000
 
-        fun obtain(worker: Worker, outputDir: File): FileServer {
-            val fileServer = FileServer(worker, outputDir)
+        fun obtain(myCat: ByteCat, outputDir: File): FileServer {
+            val fileServer = FileServer(myCat, outputDir)
             var port = START_PORT
             while (!fileServer.start(port) && port <= END_PORT) {
                 port++
@@ -31,8 +31,6 @@ class FileServer private constructor(private val worker: Worker, private var out
 
     val port get() = serverSocket.localPort
 
-    private val fileInfoMap = HashMap<String, FileInfo>()
-
     fun start(port: Int): Boolean {
         try {
             serverSocket = ServerSocket(port)
@@ -48,45 +46,20 @@ class FileServer private constructor(private val worker: Worker, private var out
         if (isWaiting) {
             return
         }
-        worker.queueWork {
+        myCat.worker.queueWork {
             isWaiting = true
             while (started) {
                 val clientSocket = serverSocket.accept()
-                val transfer = FileTransfer(this, clientSocket, outputDir)
-                transfer.callback = object : FileTransfer.Callback {
-                    override fun onStart(totalSize: Long) {
-                        println("totalSize=${totalSize}")
-                    }
-
-                    override fun onTransfer(receivedSize: Long, totalSize: Long) {
-                        println("receivedSize=$receivedSize totalSize=${totalSize} percent=${receivedSize.toDouble() / totalSize * 100}")
-                    }
-
-                    override fun onEnd(file: File, md5: String, acceptCode: String) {
-                        removeFileInfo(acceptCode)
-                    }
-                }
-                worker.queueWork(transfer)
+                val transfer = FileReceiver(myCat, clientSocket, outputDir)
+                myCat.worker.queueWork(transfer)
             }
             isWaiting = false
         }
-    }
-
-    fun addFileInfo(acceptCode: String, fileName: String, length: Long, md5: String) {
-        fileInfoMap[acceptCode] = FileInfo(fileName, length, md5)
-    }
-
-    fun getFileInfo(acceptCode: String): FileInfo? = fileInfoMap[acceptCode]
-
-    fun removeFileInfo(acceptCode: String) {
-        fileInfoMap.remove(acceptCode)
     }
 
     fun close() {
         started = false
         serverSocket.close()
     }
-
-    data class FileInfo(val name: String, val length: Long, val md5: String)
 
 }
